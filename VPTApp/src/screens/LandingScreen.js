@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,68 +8,76 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/MaterialIcons";
 
 const LandingScreen = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
 
   const handleSubmit = () => {
     if (isLogin) {
-      // Handle login logic here
-      console.log('Login:', { email, password });
+      console.log("Login:", { email, password });
     } else {
-      // Handle signup logic here
-      console.log('Signup:', { name, email, password });
+      console.log("Signup:", { name, email, password });
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <Text style={styles.title}>Welcome to VPT</Text>
             <Text style={styles.subtitle}>
-              {isLogin ? 'Sign in to continue' : 'Create your account'}
+              {isLogin ? "Sign in to continue" : "Create your account"}
             </Text>
           </View>
 
-          <View style={styles.form}>
+          <View style={styles.formContainer}>
             {!isLogin && (
+              <View style={styles.inputWrapper}>
+                <Icon name="person" size={22} color="#666" />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Full Name"
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                />
+              </View>
+            )}
+            <View style={styles.inputWrapper}>
+              <Icon name="email" size={22} color="#666" />
               <TextInput
                 style={styles.input}
-                placeholder="Full Name"
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
               />
-            )}
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
+            </View>
+            <View style={styles.inputWrapper}>
+              <Icon name="lock" size={22} color="#666" />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </View>
 
             <TouchableOpacity style={styles.button} onPress={handleSubmit}>
               <Text style={styles.buttonText}>
-                {isLogin ? 'Sign In' : 'Create Account'}
+                {isLogin ? "Sign In" : "Create Account"}
               </Text>
             </TouchableOpacity>
 
@@ -80,7 +88,7 @@ const LandingScreen = () => {
               <Text style={styles.switchText}>
                 {isLogin
                   ? "Don't have an account? Sign Up"
-                  : 'Already have an account? Sign In'}
+                  : "Already have an account? Sign In"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -93,60 +101,75 @@ const LandingScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#f0f4f8",
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+    justifyContent: "center",
+    paddingHorizontal: 20,
   },
   header: {
-    alignItems: 'center',
-    marginBottom: 40,
+    alignItems: "center",
+    marginBottom: 30,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#333",
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
+    marginTop: 5,
   },
-  form: {
-    width: '100%',
+  formContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    marginBottom: 15,
   },
   input: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
     fontSize: 16,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     borderRadius: 10,
-    padding: 15,
-    alignItems: 'center',
+    paddingVertical: 15,
+    alignItems: "center",
     marginTop: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   switchButton: {
-    marginTop: 20,
-    alignItems: 'center',
+    marginTop: 15,
+    alignItems: "center",
   },
   switchText: {
-    color: '#007AFF',
+    color: "#007AFF",
     fontSize: 14,
+    fontWeight: "600",
   },
 });
 
-export default LandingScreen; 
+export default LandingScreen;
