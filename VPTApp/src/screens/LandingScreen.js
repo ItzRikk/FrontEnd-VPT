@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import GoogleAuth from './GoogleAuth'; // Import the GoogleAuth component
 
 const LandingScreen = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -91,6 +92,9 @@ const LandingScreen = () => {
                   : "Already have an account? Sign In"}
               </Text>
             </TouchableOpacity>
+
+            {/* Google Sign-In Button */}
+            <GoogleAuth />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
