@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import GoogleAuth from './GoogleAuth'; // Import the GoogleAuth component
+import { signInWithGoogle } from "../auth/authWithGoogle";
 
 const LandingScreen = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -83,6 +83,13 @@ const LandingScreen = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
+              style={[styles.button, { backgroundColor: "#DB4437" }]}
+              onPress={signInWithGoogle}
+            >
+              <Text style={styles.buttonText}>Sign in with Google</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={styles.switchButton}
               onPress={() => setIsLogin(!isLogin)}
             >
@@ -92,9 +99,6 @@ const LandingScreen = () => {
                   : "Already have an account? Sign In"}
               </Text>
             </TouchableOpacity>
-
-            {/* Google Sign-In Button */}
-            <GoogleAuth />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -103,13 +107,8 @@ const LandingScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f0f4f8",
-  },
-  keyboardView: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: "#f0f4f8" },
+  keyboardView: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
