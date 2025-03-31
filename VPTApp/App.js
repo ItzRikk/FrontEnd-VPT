@@ -1,22 +1,13 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
-import AppNavigator from './src/navigation/AppNavigator';
-// import UsersList from './src/components/usersList'; 
-//this imports the userlist component that returns all users for testing 
-//
-
-//<UsersList />
+import LandingScreen from './src/screens/LandingScreen'; // Make sure the path matches your folder structure
 
 export default function App() {
- 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar style="auto" />
-        <AppNavigator />
-      </NavigationContainer>
+      <StatusBar style="auto" />
+      <LandingScreen />
     </SafeAreaProvider>
   );
 }
