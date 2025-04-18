@@ -194,13 +194,18 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     padding: 16,
     backgroundColor: colors.card,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+    width: '100%',
+    position: 'relative',
   },
   backButton: {
-    marginRight: 16,
+    position: 'absolute',
+    left: 16,
+    zIndex: 1,
   },
   scrollView: {
     flex: 1,
@@ -219,8 +224,10 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    flex: 1,
+    fontSize: 20,
+    fontWeight: '600',
     textAlign: 'center',
+    width: '100%',
   },
   subtitle: {
     color: colors.text,

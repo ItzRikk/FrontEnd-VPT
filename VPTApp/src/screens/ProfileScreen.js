@@ -34,19 +34,14 @@ const FrostedCard = ({ style, children, intensity = 60 }) => (
 
 const ActionCard = ({ icon, label, onPress, color = colors.primary }) => (
   <TouchableOpacity onPress={onPress} style={styles.actionCardContainer}>
-    <FrostedCard style={styles.actionCard}>
-      <View style={styles.actionContent}>
-        <LinearGradient
-          colors={[color, color]}
-          style={styles.iconContainer}
-        >
-          <Icon name={icon} size={20} color={colors.card} />
-        </LinearGradient>
-        <Text style={[textStyles.caption, styles.actionLabel]} numberOfLines={2}>
-          {label}
-        </Text>
+    <View style={[styles.actionCard, { borderColor: color }]}>
+      <View style={[styles.iconContainer, { backgroundColor: color }]}>
+        <Icon name={icon} size={24} color={colors.card} />
       </View>
-    </FrostedCard>
+      <Text style={[styles.actionLabel, { color: color }]} numberOfLines={2}>
+        {label}
+      </Text>
+    </View>
   </TouchableOpacity>
 );
 
@@ -163,17 +158,16 @@ const ProfileScreen = ({ route, navigation }) => {
     <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
       <View style={styles.content}>
         <View style={styles.welcomeCard}>
-          <LinearGradient
-            colors={[colors.primary, '#FF9500']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
           <View style={styles.welcomeHeader}>
-            <Text style={[textStyles.subtitle, styles.welcomeText]}>Welcome back,</Text>
+            <View style={styles.userIconContainer}>
+              <Icon name="person-circle-outline" size={40} color={colors.primary} />
+            </View>
             <Text style={[textStyles.title, styles.nameText]}>{firstName}</Text>
           </View>
           <View style={styles.experienceSection}>
+            <View style={styles.experienceIconContainer}>
+              <Icon name="fitness-outline" size={24} color={colors.primary} />
+            </View>
             <Text style={[textStyles.caption, styles.experienceLabel]}>Experience Level</Text>
             <Text style={[textStyles.subtitle, styles.experienceValue]}>
               {experienceLevel?.level || 'N/A'}
@@ -184,19 +178,22 @@ const ProfileScreen = ({ route, navigation }) => {
           </View>
         </View>
 
-        <FrostedCard style={styles.section}>
-          <Text style={[textStyles.body, styles.sectionTitle]}>Account Details</Text>
+        <View style={styles.welcomeCard}>
+          <View style={styles.sectionHeader}>
+            <Icon name="information-circle-outline" size={24} color={colors.primary} />
+            <Text style={[textStyles.subtitle, styles.sectionTitle]}>Account Details</Text>
+          </View>
           <View style={styles.detailRow}>
-            <Icon name="mail-outline" size={20} color={colors.textSecondary} />
+            <Icon name="mail-outline" size={20} color={colors.primary} />
             <Text style={[textStyles.caption, styles.detailText]}>{user?.email}</Text>
           </View>
           <View style={styles.detailRow}>
-            <Icon name="fitness-outline" size={20} color={colors.textSecondary} />
+            <Icon name="fitness-outline" size={20} color={colors.primary} />
             <Text style={[textStyles.caption, styles.detailText]}>
               {experienceLevel?.level || 'Not set'}
             </Text>
           </View>
-        </FrostedCard>
+        </View>
 
         <View style={styles.actionGrid}>
           <ActionCard
@@ -209,19 +206,19 @@ const ProfileScreen = ({ route, navigation }) => {
             icon="barbell-outline"
             label="Get Started"
             onPress={() => navigation.navigate('WorkoutEquipment')}
-            color={colors.secondary}
+            color={colors.primary}
           />
           <ActionCard
             icon="stats-chart"
             label="Progress"
-            onPress={() => {}}
-            color={colors.success}
+            onPress={() => navigation.navigate('Progress')}
+            color={colors.primary}
           />
           <ActionCard
             icon="log-out-outline"
             label="Sign Out"
             onPress={handleSignOut}
-            color={colors.error}
+            color={colors.primary}
           />
         </View>
       </View>
@@ -296,8 +293,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   actionCard: {
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.primary,
     alignItems: 'center',
-    marginBottom: 16,
   },
   actionIcon: {
     marginBottom: 16,
@@ -354,73 +355,80 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   frostedCardContainer: {
-    borderRadius: 24,
+    borderRadius: 16,
     overflow: 'hidden',
-    borderColor: 'rgba(0, 0, 0, 0.1)',
     borderWidth: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: colors.card,
+    marginBottom: 16,
   },
   frostedContent: {
-    padding: spacing.md,
+    padding: 16,
   },
   welcomeCard: {
     marginHorizontal: spacing.md,
     marginBottom: spacing.md,
-    borderRadius: 24,
+    borderRadius: 16,
     overflow: 'hidden',
-    borderColor: 'rgba(255, 255, 255, 0.3)',
     borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   welcomeHeader: {
     alignItems: 'center',
     marginBottom: spacing.md,
     padding: spacing.md,
   },
-  welcomeText: {
-    color: colors.card,
-    opacity: 0.9,
-    marginBottom: spacing.xs,
-  },
-  nameText: {
-    color: colors.card,
-    fontSize: 32,
+  userIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255, 87, 34, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
   },
   experienceSection: {
     alignItems: 'center',
     paddingTop: spacing.md,
     paddingBottom: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.2)',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderTopColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.02)',
   },
-  experienceLabel: {
+  experienceIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 87, 34, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  experienceText: {
     marginBottom: spacing.xs,
-    color: colors.card,
+    color: colors.text,
     opacity: 0.8,
-  },
-  experienceValue: {
-    color: colors.card,
-    marginBottom: spacing.xs,
-  },
-  experienceDescription: {
-    textAlign: 'center',
-    color: colors.card,
-    opacity: 0.8,
-    paddingHorizontal: spacing.md,
   },
   section: {
     marginHorizontal: spacing.md,
     marginBottom: spacing.md,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    padding: spacing.md,
+  },
   sectionTitle: {
-    marginBottom: spacing.sm,
-    fontWeight: '600',
+    marginLeft: spacing.sm,
     color: colors.text,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
   },
   detailText: {
     marginLeft: spacing.md,
@@ -437,32 +445,38 @@ const styles = StyleSheet.create({
   actionCardContainer: {
     width: CARD_WIDTH,
     margin: CARD_MARGIN,
-    alignItems: 'center',
-  },
-  actionCard: {
-    height: CARD_WIDTH * 0.4,
-    justifyContent: 'center',
-    padding: spacing.sm,
-    width: '100%',
-  },
-  actionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
   },
   iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 87, 34, 0.1)',
     justifyContent: 'center',
-    marginRight: spacing.sm,
+    alignItems: 'center',
+    marginBottom: 12,
   },
   actionLabel: {
-    flex: 1,
-    color: colors.text,
+    ...textStyles.subtitle,
+    fontSize: 14,
     textAlign: 'center',
+    fontWeight: '600',
+    color: colors.text,
+  },
+  nameText: {
+    fontSize: 24,
+    fontWeight: '600',
+  },
+  experienceLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  experienceValue: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  experienceDescription: {
+    fontSize: 14,
+    opacity: 0.8,
   },
 });
 

@@ -4,6 +4,7 @@ import LandingScreen from '../screens/LandingScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ExperienceQuestionnaireScreen from '../screens/ExperienceQuestionnaireScreen';
 import WorkoutEquipmentScreen from '../screens/WorkoutEquipmentScreen';
+import ProgressScreen from '../screens/ProgressScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -42,6 +43,13 @@ const AppNavigator = () => {
         component={WorkoutEquipmentScreen}
         options={{
           title: 'Equipment Setup'
+        }}
+      />
+      <Stack.Screen 
+        name="Progress" 
+        component={ProgressScreen}
+        options={{
+          title: 'Progress'
         }}
       />
     </Stack.Navigator>

@@ -220,63 +220,65 @@ const ExperienceQuestionnaireScreen = () => {
 
   return (
     <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
-      <LinearGradient
-        colors={[colors.primary, '#FF9500']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
+      <View style={styles.headerContainer}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Icon name="arrow-back" size={24} color={colors.primary} />
+        </TouchableOpacity>
+        <Text style={[textStyles.title, styles.title]}>Experience Assessment</Text>
+      </View>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <FrostedCard style={styles.header}>
-          <Icon name="barbell-outline" size={40} color={colors.primary} style={styles.headerIcon} />
-          <Text style={[textStyles.title, styles.title]}>Experience Assessment</Text>
+        <View style={styles.header}>
+          <Icon name="fitness-outline" size={40} color={colors.primary} style={styles.headerIcon} />
           <Text style={[textStyles.subtitle, styles.subtitle]}>
-            Please answer the following questions to help us understand your weight lifting experience level.
+            Let's assess your fitness experience level
           </Text>
-        </FrostedCard>
+        </View>
 
-        {questions.map((q) => (
-          <FrostedCard key={q.id} style={styles.questionContainer}>
-            <Text style={[textStyles.subtitle, styles.questionText]}>
-              {q.number}. {q.question}
-            </Text>
-            {q.options.map((option) => (
-              <TouchableOpacity
-                key={option.id}
-                style={[
-                  styles.optionButton,
-                  answers[q.id] === option.id && styles.selectedOption
-                ]}
-                onPress={() => handleAnswer(q.id, option.id)}
-                disabled={loading}
-              >
-                <Icon 
-                  name={answers[q.id] === option.id ? "radio-button-on" : "radio-button-off"} 
-                  size={24} 
-                  color={answers[q.id] === option.id ? colors.primary : colors.card} 
-                  style={styles.optionIcon}
-                />
-                <Text style={[
-                  textStyles.body, 
-                  styles.optionText,
-                  answers[q.id] === option.id && styles.selectedOptionText
-                ]}>{option.text}</Text>
-              </TouchableOpacity>
-            ))}
+        {questions.map((question) => (
+          <FrostedCard key={question.id} style={styles.questionCard}>
+            <View style={styles.questionContainer}>
+              <Text style={styles.questionText}>{question.question}</Text>
+              {question.options.map((option) => (
+                <TouchableOpacity
+                  key={option.id}
+                  style={[
+                    styles.optionButton,
+                    answers[question.id] === option.id && styles.selectedOption
+                  ]}
+                  onPress={() => handleAnswer(question.id, option.id)}
+                  disabled={loading}
+                >
+                  <View style={[
+                    styles.optionIconContainer,
+                    answers[question.id] === option.id && styles.selectedIconContainer
+                  ]}>
+                    <Icon 
+                      name={option.icon || "radio-button-off"} 
+                      size={24} 
+                      color={answers[question.id] === option.id ? colors.card : colors.primary} 
+                    />
+                  </View>
+                  <View style={styles.optionTextContainer}>
+                    <Text style={[
+                      styles.optionTitle,
+                      answers[question.id] === option.id && styles.selectedOptionText
+                    ]}>
+                      {option.text}
+                    </Text>
+                  </View>
+                  {answers[question.id] === option.id && (
+                    <View style={styles.checkmarkContainer}>
+                      <Icon name="checkmark-circle" size={24} color={colors.primary} />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
           </FrostedCard>
         ))}
-
-        {isComplete && (
-          <FrostedCard style={styles.pointsContainer}>
-            <Icon name="trophy-outline" size={40} color={colors.card} style={styles.trophyIcon} />
-            <Text style={[textStyles.title, styles.pointsText]}>
-              Total Points: {calculateTotalPoints()}
-            </Text>
-            <Text style={[textStyles.subtitle, styles.levelText]}>
-              Level: {determineExperienceLevel(calculateTotalPoints()).level}
-            </Text>
-          </FrostedCard>
-        )}
 
         <TouchableOpacity
           style={[
@@ -286,19 +288,25 @@ const ExperienceQuestionnaireScreen = () => {
           onPress={handleSubmit}
           disabled={!isComplete || loading}
         >
-          <View style={styles.submitIconContainer}>
-            <Icon 
-              name={loading ? "reload-outline" : "checkmark-circle-outline"} 
-              size={24} 
-              color={(!isComplete || loading) ? colors.textSecondary : colors.primary} 
-            />
-          </View>
-          <Text style={[
-            styles.submitButtonText,
-            (!isComplete || loading) && styles.disabledButtonText
-          ]}>
-            {loading ? 'Saving...' : (isComplete ? 'Complete Assessment' : 'Answer All Questions')}
-          </Text>
+          {loading ? (
+            <ActivityIndicator color={colors.primary} />
+          ) : (
+            <>
+              <View style={styles.submitIconContainer}>
+                <Icon 
+                  name="checkmark-circle-outline" 
+                  size={24} 
+                  color={(!isComplete || loading) ? colors.textSecondary : colors.primary} 
+                />
+              </View>
+              <Text style={[
+                styles.submitButtonText,
+                (!isComplete || loading) && styles.disabledButtonText
+              ]}>
+                Submit
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -306,13 +314,122 @@ const ExperienceQuestionnaireScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+    width: '100%',
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 1,
+  },
+  title: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+    width: '100%',
+  },
   scrollView: {
     flex: 1,
-    backgroundColor: colors.card,
   },
   scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: 16,
+    paddingTop: 0,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 24,
+    marginTop: 16,
+  },
+  headerIcon: {
+    marginBottom: 16,
+  },
+  subtitle: {
+    textAlign: 'center',
+    color: colors.text,
+  },
+  questionCard: {
+    marginBottom: 16,
+  },
+  questionContainer: {
+    marginBottom: 24,
+  },
+  questionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 16,
+  },
+  optionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  selectedOption: {
+    backgroundColor: colors.primary,
+  },
+  optionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 87, 34, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  selectedIconContainer: {
+    backgroundColor: colors.card,
+  },
+  optionTextContainer: {
+    flex: 1,
+  },
+  optionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  selectedOptionText: {
+    color: colors.card,
+  },
+  checkmarkContainer: {
+    marginLeft: 8,
+  },
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  submitIconContainer: {
+    marginRight: 8,
+  },
+  submitButtonText: {
+    ...textStyles.subtitle,
+    color: colors.text,
+  },
+  disabledButtonText: {
+    color: colors.textSecondary,
   },
   loadingContainer: {
     flex: 1,
@@ -345,115 +462,6 @@ const styles = StyleSheet.create({
   },
   frostedContent: {
     padding: 24,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
-    padding: 24,
-  },
-  headerIcon: {
-    marginBottom: 16,
-    alignSelf: 'center',
-  },
-  title: {
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: colors.text,
-    textAlign: 'center',
-    opacity: 0.8,
-  },
-  questionContainer: {
-    marginBottom: 16,
-  },
-  questionText: {
-    color: colors.text,
-    marginBottom: 16,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  optionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  selectedOption: {
-    backgroundColor: colors.card,
-    borderColor: colors.primary,
-  },
-  optionIcon: {
-    marginRight: 12,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  selectedOptionIcon: {
-    backgroundColor: colors.primary,
-  },
-  optionText: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 16,
-  },
-  selectedOptionText: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  pointsContainer: {
-    alignItems: 'center',
-    marginVertical: 24,
-  },
-  trophyIcon: {
-    marginBottom: 16,
-  },
-  pointsText: {
-    color: colors.text,
-    marginBottom: 8,
-  },
-  levelText: {
-    color: colors.text,
-    opacity: 0.8,
-  },
-  submitButton: {
-    height: 56,
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  submitIconContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  submitButtonText: {
-    color: colors.primary,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-  disabledButtonText: {
-    color: colors.textSecondary,
   },
 });
 
