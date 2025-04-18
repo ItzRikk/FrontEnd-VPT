@@ -157,107 +157,128 @@ const LandingScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
-      <LinearGradient
-        colors={[colors.primary, '#FF9500']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoidingView}
-      >
-        <View style={styles.content}>
-          <View style={styles.headerContainer}>
-            <Icon name="barbell-outline" size={60} color={colors.card} style={styles.headerIcon} />
-            <Text style={[textStyles.title, styles.title]}>Welcome to VPT</Text>
-            <Text style={[textStyles.subtitle, styles.subtitle]}>
-              {isLogin ? 'Sign in to continue' : 'Create your account'}
-            </Text>
+      <View style={styles.background}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingView}
+        >
+          <View style={styles.content}>
+            <LinearGradient
+              colors={[colors.primary, '#FF9500']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.welcomeCard}
+            >
+              <View style={styles.headerContainer}>
+                <Icon name="barbell-outline" size={60} color={colors.card} style={styles.headerIcon} />
+                <Text style={[textStyles.title, styles.title]}>Welcome to VPT</Text>
+                <Text style={[textStyles.subtitle, styles.subtitle]}>
+                  {isLogin ? 'Sign in to continue' : 'Create your account'}
+                </Text>
+              </View>
+
+              <View style={styles.formContainer}>
+                {!isLogin && (
+                  <InputField
+                    icon="person-outline"
+                    placeholder="Full Name"
+                    value={name}
+                    onChangeText={setName}
+                    autoCapitalize="words"
+                  />
+                )}
+
+                <InputField
+                  icon="mail-outline"
+                  placeholder="Email"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                />
+
+                <InputField
+                  icon="lock-closed-outline"
+                  placeholder="Password"
+                  value={password}
+                  onChangeText={setPassword}
+                  autoComplete="password"
+                  isPassword
+                />
+
+                <TouchableOpacity
+                  style={[styles.submitButton]}
+                  onPress={handleSubmit}
+                  disabled={loading}
+                >
+                  <Icon 
+                    name={loading ? "reload-outline" : (isLogin ? "log-in-outline" : "person-add-outline")} 
+                    size={20} 
+                    color={colors.primary} 
+                    style={styles.submitIcon}
+                  />
+                  <Text style={styles.submitButtonText}>
+                    {loading ? 'Loading...' : (isLogin ? 'Sign In' : 'Sign Up')}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.switchButton}
+                  onPress={() => setIsLogin(!isLogin)}
+                  disabled={loading}
+                >
+                  <Icon 
+                    name={isLogin ? "person-add-outline" : "log-in-outline"} 
+                    size={16} 
+                    color={colors.card} 
+                    style={styles.switchIcon}
+                  />
+                  <Text style={styles.switchButtonText}>
+                    {isLogin
+                      ? "Don't have an account? Sign Up"
+                      : 'Already have an account? Sign In'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
           </View>
-
-          <FrostedCard style={styles.formContainer}>
-            {!isLogin && (
-              <InputField
-                icon="person-outline"
-                placeholder="Full Name"
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
-            )}
-
-            <InputField
-              icon="mail-outline"
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-
-            <InputField
-              icon="lock-closed-outline"
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              autoComplete="password"
-              isPassword
-            />
-
-            <TouchableOpacity
-              style={[styles.submitButton]}
-              onPress={handleSubmit}
-              disabled={loading}
-            >
-              <Icon 
-                name={loading ? "reload-outline" : (isLogin ? "log-in-outline" : "person-add-outline")} 
-                size={20} 
-                color={colors.primary} 
-                style={styles.submitIcon}
-              />
-              <Text style={styles.submitButtonText}>
-                {loading ? 'Loading...' : (isLogin ? 'Sign In' : 'Sign Up')}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.switchButton}
-              onPress={() => setIsLogin(!isLogin)}
-              disabled={loading}
-            >
-              <Icon 
-                name={isLogin ? "person-add-outline" : "log-in-outline"} 
-                size={16} 
-                color={colors.card} 
-                style={styles.switchIcon}
-              />
-              <Text style={styles.switchButtonText}>
-                {isLogin
-                  ? "Don't have an account? Sign Up"
-                  : 'Already have an account? Sign In'}
-              </Text>
-            </TouchableOpacity>
-          </FrostedCard>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   keyboardAvoidingView: {
     flex: 1,
   },
   content: {
     flex: 1,
-    padding: 20,
     justifyContent: 'center',
+    padding: 20,
+  },
+  welcomeCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#000000',
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   headerContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 24,
   },
   headerIcon: {
     marginBottom: 16,
@@ -273,37 +294,32 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     opacity: 0.8,
   },
-  frostedCardContainer: {
-    borderRadius: 24,
-    overflow: 'hidden',
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    borderWidth: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  frostedContent: {
-    padding: 24,
-  },
   formContainer: {
     width: '100%',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 50,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     paddingHorizontal: 16,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+    height: 50,
   },
   inputIcon: {
     marginRight: 12,
+    color: 'rgba(255, 255, 255, 0.6)',
   },
   input: {
     flex: 1,
+    height: 50,
     color: colors.card,
     fontSize: 16,
+  },
+  passwordToggle: {
+    padding: 8,
   },
   submitButton: {
     height: 50,
@@ -323,10 +339,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   switchButton: {
-    marginTop: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 16,
   },
   switchIcon: {
     marginRight: 8,
@@ -335,10 +351,6 @@ const styles = StyleSheet.create({
   switchButtonText: {
     color: colors.card,
     fontSize: 14,
-    opacity: 0.8,
-  },
-  passwordToggle: {
-    padding: 4,
   },
 });
 

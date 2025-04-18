@@ -38,7 +38,7 @@ const ActionCard = ({ icon, label, onPress, color = colors.primary }) => (
       <View style={[styles.iconContainer, { backgroundColor: color }]}>
         <Icon name={icon} size={24} color={colors.card} />
       </View>
-      <Text style={[styles.actionLabel, { color: color }]} numberOfLines={2}>
+      <Text style={styles.actionLabel} numberOfLines={2}>
         {label}
       </Text>
     </View>
@@ -160,21 +160,25 @@ const ProfileScreen = ({ route, navigation }) => {
         <View style={styles.welcomeCard}>
           <View style={styles.welcomeHeader}>
             <View style={styles.userIconContainer}>
-              <Icon name="person-circle-outline" size={40} color={colors.primary} />
+              <Icon name="person-circle-outline" size={24} color={colors.primary} />
             </View>
             <Text style={[textStyles.title, styles.nameText]}>{firstName}</Text>
           </View>
           <View style={styles.experienceSection}>
-            <View style={styles.experienceIconContainer}>
-              <Icon name="fitness-outline" size={24} color={colors.primary} />
+            <View style={styles.experienceRow}>
+              <View style={styles.experienceIconContainer}>
+                <Icon name="fitness-outline" size={20} color={colors.primary} />
+              </View>
+              <View style={styles.experienceTextContainer}>
+                <Text style={[textStyles.caption, styles.experienceLabel]}>Experience Level</Text>
+                <Text style={[textStyles.subtitle, styles.experienceValue]}>
+                  {experienceLevel?.level || 'N/A'}
+                </Text>
+                <Text style={[textStyles.caption, styles.experienceDescription]} numberOfLines={2}>
+                  {experienceLevel?.description || 'Complete the questionnaire to set your experience level'}
+                </Text>
+              </View>
             </View>
-            <Text style={[textStyles.caption, styles.experienceLabel]}>Experience Level</Text>
-            <Text style={[textStyles.subtitle, styles.experienceValue]}>
-              {experienceLevel?.level || 'N/A'}
-            </Text>
-            <Text style={[textStyles.caption, styles.experienceDescription]} numberOfLines={2}>
-              {experienceLevel?.description || 'Complete the questionnaire to set your experience level'}
-            </Text>
           </View>
         </View>
 
@@ -375,40 +379,56 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   welcomeHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.md,
     padding: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.primary,
   },
   userIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(255, 87, 34, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  experienceSection: {
-    alignItems: 'center',
-    paddingTop: spacing.md,
-    paddingBottom: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.1)',
-    backgroundColor: 'rgba(0, 0, 0, 0.02)',
-  },
-  experienceIconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: 'rgba(255, 87, 34, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginRight: spacing.sm,
   },
-  experienceText: {
-    marginBottom: spacing.xs,
-    color: colors.text,
+  experienceSection: {
+    padding: spacing.md,
+  },
+  experienceRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  experienceIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 87, 34, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
+  },
+  experienceTextContainer: {
+    flex: 1,
+  },
+  experienceLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 2,
+    color: '#000000',
+  },
+  experienceValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+    color: '#000000',
+  },
+  experienceDescription: {
+    fontSize: 14,
     opacity: 0.8,
+    color: '#000000',
   },
   section: {
     marginHorizontal: spacing.md,
@@ -417,12 +437,13 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.md,
     padding: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.primary,
   },
   sectionTitle: {
     marginLeft: spacing.sm,
-    color: colors.text,
+    color: '#000000',
   },
   detailRow: {
     flexDirection: 'row',
@@ -433,7 +454,7 @@ const styles = StyleSheet.create({
   detailText: {
     marginLeft: spacing.md,
     flex: 1,
-    color: colors.text,
+    color: '#000000',
   },
   actionGrid: {
     flexDirection: 'row',
@@ -460,23 +481,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     fontWeight: '600',
-    color: colors.text,
+    color: '#000000',
   },
   nameText: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '600',
-  },
-  experienceLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  experienceValue: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  experienceDescription: {
-    fontSize: 14,
-    opacity: 0.8,
+    flex: 1,
+    color: '#000000',
   },
 });
 
