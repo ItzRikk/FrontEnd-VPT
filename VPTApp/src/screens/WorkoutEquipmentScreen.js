@@ -7,6 +7,7 @@ import {
   ScrollView,
   SafeAreaView,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { colors, textStyles, layoutStyles } from '../styles/sharedStyles';
@@ -66,21 +67,27 @@ const WorkoutEquipmentScreen = () => {
 
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      if (user) {
-        // Update user metadata with equipment preference
-        const { error } = await supabase.auth.updateUser({
-          data: {
-            equipment_preference: selectedEquipment,
-          }
-        });
-
-        if (error) throw error;
-
-        // Navigate to the next screen (you can replace this with your desired navigation)
-        navigation.navigate('Home');
+      if (userError) throw userError;
+      
+      if (!user) {
+        Alert.alert('Error', 'You must be logged in to save your equipment preferences.');
+        navigation.navigate('Landing');
+        return;
       }
+
+      // Update user metadata with equipment preference
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          equipment_preference: selectedEquipment,
+        }
+      });
+
+      if (error) throw error;
+
+      // Navigate back to profile
+      navigation.navigate('Profile');
     } catch (error) {
       console.error('Error saving equipment preference:', error);
       Alert.alert('Error', 'Failed to save your equipment preference. Please try again.');
@@ -91,10 +98,18 @@ const WorkoutEquipmentScreen = () => {
 
   return (
     <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
+      <View style={styles.headerContainer}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Icon name="arrow-back" size={24} color={colors.primary} />
+        </TouchableOpacity>
+        <Text style={[textStyles.title, styles.title]}>Equipment Setup</Text>
+      </View>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Icon name="fitness-outline" size={40} color={colors.primary} style={styles.headerIcon} />
-          <Text style={[textStyles.title, styles.title]}>Equipment Setup</Text>
           <Text style={[textStyles.subtitle, styles.subtitle]}>
             What kind of workout equipment do you have available?
           </Text>
@@ -110,7 +125,10 @@ const WorkoutEquipmentScreen = () => {
             onPress={() => handleSelect(option.id)}
             disabled={loading}
           >
-            <View style={styles.optionIconContainer}>
+            <View style={[
+              styles.optionIconContainer,
+              selectedEquipment === option.id && styles.selectedIconContainer
+            ]}>
               <Icon 
                 name={option.icon} 
                 size={24} 
@@ -131,6 +149,11 @@ const WorkoutEquipmentScreen = () => {
                 {option.description}
               </Text>
             </View>
+            {selectedEquipment === option.id && (
+              <View style={styles.checkmarkContainer}>
+                <Icon name="checkmark-circle" size={24} color={colors.primary} />
+              </View>
+            )}
           </TouchableOpacity>
         ))}
 
@@ -142,19 +165,25 @@ const WorkoutEquipmentScreen = () => {
           onPress={handleSubmit}
           disabled={!selectedEquipment || loading}
         >
-          <View style={styles.submitIconContainer}>
-            <Icon 
-              name={loading ? "reload-outline" : "checkmark-circle-outline"} 
-              size={24} 
-              color={(!selectedEquipment || loading) ? colors.textSecondary : colors.primary} 
-            />
-          </View>
-          <Text style={[
-            styles.submitButtonText,
-            (!selectedEquipment || loading) && styles.disabledButtonText
-          ]}>
-            {loading ? 'Saving...' : 'Continue'}
-          </Text>
+          {loading ? (
+            <ActivityIndicator color={colors.primary} />
+          ) : (
+            <>
+              <View style={styles.submitIconContainer}>
+                <Icon 
+                  name="checkmark-circle-outline" 
+                  size={24} 
+                  color={(!selectedEquipment || loading) ? colors.textSecondary : colors.primary} 
+                />
+              </View>
+              <Text style={[
+                styles.submitButtonText,
+                (!selectedEquipment || loading) && styles.disabledButtonText
+              ]}>
+                Continue
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -162,6 +191,17 @@ const WorkoutEquipmentScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  backButton: {
+    marginRight: 16,
+  },
   scrollView: {
     flex: 1,
     backgroundColor: colors.card,
@@ -179,8 +219,8 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
+    flex: 1,
     textAlign: 'center',
-    marginBottom: 8,
   },
   subtitle: {
     color: colors.text,
@@ -210,6 +250,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
+  selectedIconContainer: {
+    backgroundColor: colors.primary,
+  },
   optionTextContainer: {
     flex: 1,
   },
@@ -231,6 +274,9 @@ const styles = StyleSheet.create({
     color: colors.primary,
     opacity: 0.8,
   },
+  checkmarkContainer: {
+    marginLeft: 8,
+  },
   submitButton: {
     height: 56,
     backgroundColor: colors.card,
@@ -249,11 +295,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 8,
   },
   submitButtonText: {
     color: colors.primary,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
   disabledButton: {
