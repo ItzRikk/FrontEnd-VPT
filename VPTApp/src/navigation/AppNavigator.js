@@ -2,7 +2,8 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LandingScreen from '../screens/LandingScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import DatabaseViewerScreen from '../screens/DatabaseViewerScreen';
+import ExperienceQuestionnaireScreen from '../screens/ExperienceQuestionnaireScreen';
+import WorkoutEquipmentScreen from '../screens/WorkoutEquipmentScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -30,13 +31,19 @@ const AppNavigator = () => {
         }}
       />
       <Stack.Screen 
-        name="DatabaseViewer" 
-        component={DatabaseViewerScreen}
+        name="Questionnaire" 
+        component={ExperienceQuestionnaireScreen}
         options={{
-          title: 'Database Viewer'
+          title: 'Experience Assessment'
         }}
       />
-      {/* Add other screens here */}
+      <Stack.Screen 
+        name="WorkoutEquipment" 
+        component={WorkoutEquipmentScreen}
+        options={{
+          title: 'Equipment Setup'
+        }}
+      />
     </Stack.Navigator>
   );
 };

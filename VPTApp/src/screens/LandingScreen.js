@@ -7,346 +7,338 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
-  Image,
-  Modal,
+  Dimensions,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import ExperienceQuestionnaireModal from '../components/ExperienceQuestionnaireModal';
+import { colors, textStyles, buttonStyles, inputStyles, layoutStyles } from '../styles/sharedStyles';
+import { supabase } from '../api/supabaseClient';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import Icon from 'react-native-vector-icons/Ionicons';
+
+const { width, height } = Dimensions.get('window');
+
+const FrostedCard = ({ style, children, intensity = 60 }) => (
+  <View style={[styles.frostedCardContainer, style]}>
+    <BlurView
+      intensity={intensity}
+      tint="default"
+      style={StyleSheet.absoluteFill}
+    />
+    <View style={styles.frostedContent}>
+      {children}
+    </View>
+  </View>
+);
+
+const InputField = ({ icon, isPassword, ...props }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <View style={styles.inputContainer}>
+      <Icon name={icon} size={20} color="rgba(255, 255, 255, 0.6)" style={styles.inputIcon} />
+      <TextInput
+        style={styles.input}
+        placeholderTextColor="rgba(255, 255, 255, 0.6)"
+        secureTextEntry={isPassword && !showPassword}
+        {...props}
+      />
+      {isPassword && (
+        <TouchableOpacity 
+          onPress={() => setShowPassword(!showPassword)}
+          style={styles.passwordToggle}
+        >
+          <Icon 
+            name={showPassword ? "eye-off-outline" : "eye-outline"} 
+            size={20} 
+            color="rgba(255, 255, 255, 0.6)" 
+          />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
 
 const LandingScreen = ({ navigation }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
-  const [questionnaireResults, setQuestionnaireResults] = useState(null);
-  const [settingsMenuVisible, setSettingsMenuVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
-    if (isLogin) {
-      // Handle login logic here
-      console.log('Login:', { email, password });
-      // For demo purposes, just navigate to Profile screen
-      // In a real app, you'd authenticate with Supabase first
-      navigation.navigate('Profile');
-    } else {
-      // Handle signup logic here
-      console.log('Signup:', { name, email, password });
-      // For demo purposes, just navigate to Profile screen
-      // In a real app, you'd register with Supabase first
-      navigation.navigate('Profile');
+  const handleSubmit = async () => {
+    if (loading) return;
+
+    try {
+      setLoading(true);
+      if (isLogin) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password: password.trim(),
+        });
+        
+        if (error) {
+          Alert.alert('Login Error', error.message);
+          return;
+        }
+        
+        if (data?.user) {
+          console.log('User logged in:', data.user.id);
+          
+          // Fetch user's experience level
+          const { data: questionnaireData, error: questionnaireError } = await supabase
+            .from('questionnaire_answers')
+            .select('experience_level, experience_description')
+            .eq('user_id', data.user.id)
+            .single();
+
+          console.log('Fetched questionnaire data:', questionnaireData);
+          console.log('Questionnaire error:', questionnaireError);
+
+          if (!questionnaireError && questionnaireData) {
+            console.log('Updating user metadata with experience level:', questionnaireData);
+            const { error: updateError } = await supabase.auth.updateUser({
+              data: {
+                experience_level: questionnaireData.experience_level,
+                experience_description: questionnaireData.experience_description
+              }
+            });
+            console.log('Update user metadata error:', updateError);
+          }
+
+          navigation.navigate('Profile');
+        }
+      } else {
+        if (!name.trim()) {
+          Alert.alert('Error', 'Please enter your name');
+          return;
+        }
+        if (!email.trim()) {
+          Alert.alert('Error', 'Please enter your email');
+          return;
+        }
+        if (!password.trim()) {
+          Alert.alert('Error', 'Please enter your password');
+          return;
+        }
+        if (password.trim().length < 6) {
+          Alert.alert('Error', 'Password must be at least 6 characters long');
+          return;
+        }
+
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password: password.trim(),
+          options: {
+            data: {
+              name: name.trim(),
+            },
+          },
+        });
+        
+        if (error) {
+          Alert.alert('Signup Error', error.message);
+          return;
+        }
+        
+        if (data?.user) {
+          Alert.alert('Success', 'Please check your email for verification link');
+          setIsLogin(true);
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const openQuestionnaire = () => {
-    setModalVisible(true);
-  };
-
-  const handleCloseQuestionnaire = () => {
-    setModalVisible(false);
-  };
-
-  const handleSubmitQuestionnaire = (results) => {
-    console.log('Questionnaire Results:', results);
-    setQuestionnaireResults(results);
-    setModalVisible(false);
-  };
-
-  const toggleSettingsMenu = () => {
-    setSettingsMenuVisible(!settingsMenuVisible);
-  };
-
-  const navigateToDatabaseViewer = () => {
-    setSettingsMenuVisible(false);
-    navigation.navigate('DatabaseViewer');
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Settings Icon */}
-      <TouchableOpacity
-        style={styles.settingsIcon}
-        onPress={toggleSettingsMenu}
-      >
-        <Text style={styles.settingsIconText}>⚙️</Text>
-      </TouchableOpacity>
-
-      {/* Settings Menu */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={settingsMenuVisible}
-        onRequestClose={() => setSettingsMenuVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.settingsModalOverlay}
-          activeOpacity={1}
-          onPress={() => setSettingsMenuVisible(false)}
-        >
-          <View 
-            style={styles.settingsMenu}
-            // Prevent touches on the menu from closing the modal
-            onStartShouldSetResponder={() => true}
-          >
-            <Text style={styles.settingsMenuTitle}>Developer Options</Text>
-            
-            <TouchableOpacity 
-              style={styles.settingsMenuItem}
-              onPress={navigateToDatabaseViewer}
-            >
-              <Text style={styles.settingsMenuItemIcon}>🗄️</Text>
-              <Text style={styles.settingsMenuItemText}>View Database Tables</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.settingsMenuItem, styles.closeMenuItem]}
-              onPress={() => setSettingsMenuVisible(false)}
-            >
-              <Text style={styles.closeMenuItemText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
+    <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
+      <LinearGradient
+        colors={[colors.primary, '#FF9500']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
+        style={styles.keyboardAvoidingView}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.logoContainer}>
-            <Image 
-              source={require('../../assets/VPT-logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
-          
-          <View style={styles.header}>
-            <Text style={styles.title}>Welcome to VPT</Text>
-            <Text style={styles.subtitle}>
+        <View style={styles.content}>
+          <View style={styles.headerContainer}>
+            <Icon name="barbell-outline" size={60} color={colors.card} style={styles.headerIcon} />
+            <Text style={[textStyles.title, styles.title]}>Welcome to VPT</Text>
+            <Text style={[textStyles.subtitle, styles.subtitle]}>
               {isLogin ? 'Sign in to continue' : 'Create your account'}
             </Text>
           </View>
 
-          <View style={styles.form}>
+          <FrostedCard style={styles.formContainer}>
             {!isLogin && (
-              <TextInput
-                style={styles.input}
+              <InputField
+                icon="person-outline"
                 placeholder="Full Name"
                 value={name}
                 onChangeText={setName}
                 autoCapitalize="words"
               />
             )}
-            <TextInput
-              style={styles.input}
+
+            <InputField
+              icon="mail-outline"
               placeholder="Email"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoComplete="email"
             />
-            <TextInput
-              style={styles.input}
+
+            <InputField
+              icon="lock-closed-outline"
               placeholder="Password"
               value={password}
               onChangeText={setPassword}
-              secureTextEntry
+              autoComplete="password"
+              isPassword
             />
 
-            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-              <Text style={styles.buttonText}>
-                {isLogin ? 'Sign In' : 'Create Account'}
+            <TouchableOpacity
+              style={[styles.submitButton]}
+              onPress={handleSubmit}
+              disabled={loading}
+            >
+              <Icon 
+                name={loading ? "reload-outline" : (isLogin ? "log-in-outline" : "person-add-outline")} 
+                size={20} 
+                color={colors.primary} 
+                style={styles.submitIcon}
+              />
+              <Text style={styles.submitButtonText}>
+                {loading ? 'Loading...' : (isLogin ? 'Sign In' : 'Sign Up')}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.switchButton}
               onPress={() => setIsLogin(!isLogin)}
+              disabled={loading}
             >
-              <Text style={styles.switchText}>
+              <Icon 
+                name={isLogin ? "person-add-outline" : "log-in-outline"} 
+                size={16} 
+                color={colors.card} 
+                style={styles.switchIcon}
+              />
+              <Text style={styles.switchButtonText}>
                 {isLogin
                   ? "Don't have an account? Sign Up"
                   : 'Already have an account? Sign In'}
               </Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.button, styles.questionnaireButton]}
-              onPress={openQuestionnaire}
-            >
-              <Text style={styles.buttonText}>
-                Experience Questionnaire
-              </Text>
-            </TouchableOpacity>
-
-            {questionnaireResults && (
-              <View style={styles.resultsContainer}>
-                <Text style={styles.resultsTitle}>Questionnaire Results:</Text>
-                <Text style={styles.resultsText}>
-                  Total Score: {questionnaireResults.totalScore}
-                </Text>
-              </View>
-            )}
-          </View>
-        </ScrollView>
+          </FrostedCard>
+        </View>
       </KeyboardAvoidingView>
-
-      <ExperienceQuestionnaireModal
-        visible={modalVisible}
-        onClose={handleCloseQuestionnaire}
-        onSubmit={handleSubmitQuestionnaire}
-      />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  keyboardView: {
+  keyboardAvoidingView: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
+  content: {
+    flex: 1,
     padding: 20,
+    justifyContent: 'center',
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  logo: {
-    width: 180,
-    height: 80,
-  },
-  header: {
+  headerContainer: {
     alignItems: 'center',
     marginBottom: 40,
   },
+  headerIcon: {
+    marginBottom: 16,
+  },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
+    color: colors.card,
+    textAlign: 'center',
+    marginBottom: 8,
+    fontSize: 40,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
+    color: colors.card,
+    textAlign: 'center',
+    opacity: 0.8,
   },
-  form: {
+  frostedCardContainer: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderWidth: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  frostedContent: {
+    padding: 24,
+  },
+  formContainer: {
     width: '100%',
   },
-  input: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 15,
-    fontSize: 16,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    borderRadius: 10,
-    padding: 15,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  switchButton: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  switchText: {
-    color: '#007AFF',
-    fontSize: 14,
-  },
-  questionnaireButton: {
-    marginTop: 40,
-    backgroundColor: '#34C759',
-  },
-  resultsContainer: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-  },
-  resultsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
-  },
-  resultsText: {
-    fontSize: 15,
-    color: '#007AFF',
-    fontWeight: '500',
-  },
-  settingsIcon: {
-    position: 'absolute',
-    top: 10,
-    right: 15,
-    zIndex: 10,
-    padding: 8,
-  },
-  settingsIconText: {
-    fontSize: 24,
-  },
-  settingsModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  settingsMenu: {
-    width: '80%',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  settingsMenuTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#333',
-    textAlign: 'center',
-  },
-  settingsMenuItem: {
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    height: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-  settingsMenuItemIcon: {
-    fontSize: 20,
-    marginRight: 10,
+  inputIcon: {
+    marginRight: 12,
   },
-  settingsMenuItemText: {
+  input: {
+    flex: 1,
+    color: colors.card,
     fontSize: 16,
-    color: '#333',
   },
-  closeMenuItem: {
+  submitButton: {
+    height: 50,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 10,
-    borderBottomWidth: 0,
+    alignItems: 'center',
+    marginTop: 8,
   },
-  closeMenuItemText: {
-    color: '#007AFF',
+  submitIcon: {
+    marginRight: 8,
+  },
+  submitButtonText: {
+    color: colors.primary,
     fontSize: 16,
-    fontWeight: '500',
-    textAlign: 'center',
+    fontWeight: '600',
+  },
+  switchButton: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  switchIcon: {
+    marginRight: 8,
+    opacity: 0.8,
+  },
+  switchButtonText: {
+    color: colors.card,
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  passwordToggle: {
+    padding: 4,
   },
 });
 
