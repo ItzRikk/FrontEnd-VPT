@@ -178,7 +178,7 @@ const LandingScreen = ({ navigation }) => {
                     resizeMode="cover"
                   />
                 </View>
-                <Text style={[textStyles.title, styles.title]}>Welcome to VPT</Text>
+                <Text style={[textStyles.title, styles.title]}>Welcome</Text>
                 <Text style={[textStyles.subtitle, styles.subtitle]}>
                   {isLogin ? 'Sign in to continue' : 'Create your account'}
                 </Text>
