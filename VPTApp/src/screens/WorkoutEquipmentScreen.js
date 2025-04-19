@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { colors, textStyles, layoutStyles } from '../styles/sharedStyles';
 import { supabase } from '../api/supabaseClient';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Header from '../components/Header';
 
 const equipmentOptions = [
   {
@@ -98,15 +99,7 @@ const WorkoutEquipmentScreen = () => {
 
   return (
     <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Icon name="arrow-back" size={24} color={colors.primary} />
-        </TouchableOpacity>
-        <Text style={[textStyles.title, styles.title]}>Equipment Setup</Text>
-      </View>
+      <Header title="Equipment Setup" />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Icon name="fitness-outline" size={40} color={colors.primary} style={styles.headerIcon} />
@@ -191,22 +184,6 @@ const WorkoutEquipmentScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
-    width: '100%',
-    position: 'relative',
-  },
-  backButton: {
-    position: 'absolute',
-    left: 16,
-    zIndex: 1,
-  },
   scrollView: {
     flex: 1,
     backgroundColor: colors.card,
@@ -221,13 +198,6 @@ const styles = StyleSheet.create({
   },
   headerIcon: {
     marginBottom: 16,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: '600',
-    textAlign: 'center',
-    width: '100%',
   },
   subtitle: {
     color: colors.text,

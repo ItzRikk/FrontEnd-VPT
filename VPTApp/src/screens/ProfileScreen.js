@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Dimensions,
   Platform,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../api/supabaseClient';
@@ -14,6 +15,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { colors, textStyles, layoutStyles, spacing } from '../styles/sharedStyles';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import Header from '../components/Header';
 
 const { width, height } = Dimensions.get('window');
 const CARD_MARGIN = spacing.xs;
@@ -156,6 +158,7 @@ const ProfileScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
+      <Header title="Profile" showBack={false} />
       <View style={styles.content}>
         <View style={styles.welcomeCard}>
           <View style={styles.welcomeHeader}>
@@ -225,138 +228,40 @@ const ProfileScreen = ({ route, navigation }) => {
             color={colors.primary}
           />
         </View>
+
+        {/* Decorative Footer */}
+        <View style={styles.footerContainer}>
+          <View style={styles.footerIconRow}>
+            <View style={styles.footerIconWrapper}>
+              <Icon name="barbell-outline" size={24} color={`${colors.primary}40`} />
+            </View>
+            <View style={styles.footerIconWrapper}>
+              <Icon name="bicycle-outline" size={24} color={`${colors.primary}40`} />
+            </View>
+            <View style={styles.footerIconWrapper}>
+              <Icon name="fitness-outline" size={24} color={`${colors.primary}40`} />
+            </View>
+          </View>
+          <View style={styles.motivationContainer}>
+            <Text style={styles.motivationText}>
+              "Every rep brings you closer to your goals"
+            </Text>
+            <View style={styles.motivationDivider} />
+            <Text style={styles.motivationSubtext}>
+              Track your progress. Stay motivated. Achieve more.
+            </Text>
+          </View>
+        </View>
       </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  headerIcon: {
-    marginBottom: 16,
-  },
-  title: {
-    color: colors.card,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: colors.card,
-    textAlign: 'center',
-    opacity: 0.8,
-  },
-  userCard: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  userIcon: {
-    marginBottom: 16,
-  },
-  userName: {
-    color: colors.card,
-    fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  userEmail: {
-    color: colors.card,
-    opacity: 0.8,
-  },
-  accountCard: {
-    marginBottom: 24,
-  },
-  accountTitle: {
-    color: colors.card,
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  accountItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  accountIcon: {
-    marginRight: 12,
-  },
-  accountText: {
-    color: colors.card,
-    fontSize: 16,
-  },
-  actionCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    alignItems: 'center',
-  },
-  actionIcon: {
-    marginBottom: 16,
-  },
-  actionTitle: {
-    color: colors.card,
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  actionDescription: {
-    color: colors.card,
-    opacity: 0.8,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  actionButton: {
-    height: 48,
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  actionButtonText: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  signOutButton: {
-    height: 48,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  signOutButtonText: {
-    color: colors.card,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  signOutIcon: {
-    marginRight: 8,
-  },
   content: {
     flex: 1,
-    paddingTop: spacing.md,
     backgroundColor: '#FFFFFF',
+    paddingTop: spacing.md,
   },
   frostedCardContainer: {
     borderRadius: 16,
@@ -430,10 +335,6 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     color: '#000000',
   },
-  section: {
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.md,
-  },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -467,6 +368,14 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH,
     margin: CARD_MARGIN,
   },
+  actionCard: {
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    alignItems: 'center',
+  },
   iconContainer: {
     width: 48,
     height: 48,
@@ -488,6 +397,47 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
     color: '#000000',
+  },
+  footerContainer: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    marginTop: 'auto', // Pushes the footer to the bottom
+  },
+  footerIconRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  footerIconWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: `${colors.primary}10`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: spacing.sm,
+  },
+  motivationContainer: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  motivationText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  motivationDivider: {
+    width: 40,
+    height: 2,
+    backgroundColor: `${colors.primary}30`,
+    marginVertical: spacing.sm,
+  },
+  motivationSubtext: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
 });
 

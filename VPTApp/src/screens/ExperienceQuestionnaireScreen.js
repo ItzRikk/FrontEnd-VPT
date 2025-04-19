@@ -16,6 +16,7 @@ import { supabase } from '../api/supabaseClient';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Header from '../components/Header';
 
 const { width } = Dimensions.get('window');
 
@@ -184,6 +185,7 @@ const ExperienceQuestionnaireScreen = () => {
   if (fetchingQuestions) {
     return (
       <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
+        <Header title="Experience Assessment" />
         <LinearGradient
           colors={[colors.primary, '#FF9500']}
           start={{ x: 0, y: 0 }}
@@ -201,6 +203,7 @@ const ExperienceQuestionnaireScreen = () => {
   if (questions.length === 0) {
     return (
       <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
+        <Header title="Experience Assessment" />
         <LinearGradient
           colors={[colors.primary, '#FF9500']}
           start={{ x: 0, y: 0 }}
@@ -220,15 +223,7 @@ const ExperienceQuestionnaireScreen = () => {
 
   return (
     <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Icon name="arrow-back" size={24} color={colors.primary} />
-        </TouchableOpacity>
-        <Text style={[textStyles.title, styles.title]}>Experience Assessment</Text>
-      </View>
+      <Header title="Experience Assessment" />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Icon name="fitness-outline" size={40} color={colors.primary} style={styles.headerIcon} />
@@ -314,35 +309,13 @@ const ExperienceQuestionnaireScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
-    width: '100%',
-    position: 'relative',
-  },
-  backButton: {
-    position: 'absolute',
-    left: 16,
-    zIndex: 1,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: '600',
-    textAlign: 'center',
-    width: '100%',
-  },
   scrollView: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   scrollContent: {
-    padding: 16,
-    paddingTop: 0,
+    padding: 20,
+    paddingBottom: 40,
   },
   header: {
     alignItems: 'center',
@@ -358,51 +331,66 @@ const styles = StyleSheet.create({
   },
   questionCard: {
     marginBottom: 16,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
   questionContainer: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   questionText: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   optionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   selectedOption: {
-    backgroundColor: colors.primary,
+    backgroundColor: `${colors.primary}10`,
+    borderColor: colors.primary,
   },
   optionIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 87, 34, 0.1)',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 12,
   },
   selectedIconContainer: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.primary,
   },
   optionTextContainer: {
     flex: 1,
   },
   optionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '500',
     color: colors.text,
   },
   selectedOptionText: {
-    color: colors.card,
+    color: colors.primary,
+    fontWeight: '600',
   },
   checkmarkContainer: {
     marginLeft: 8,

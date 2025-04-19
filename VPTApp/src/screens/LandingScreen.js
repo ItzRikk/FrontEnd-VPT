@@ -9,6 +9,7 @@ import {
   Platform,
   Dimensions,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, textStyles, buttonStyles, inputStyles, layoutStyles } from '../styles/sharedStyles';
@@ -170,7 +171,13 @@ const LandingScreen = ({ navigation }) => {
               style={styles.welcomeCard}
             >
               <View style={styles.headerContainer}>
-                <Icon name="barbell-outline" size={60} color={colors.card} style={styles.headerIcon} />
+                <View style={styles.logoContainer}>
+                  <Image 
+                    source={require('../../assets/vpt-logo.png')}
+                    style={styles.logo}
+                    resizeMode="cover"
+                  />
+                </View>
                 <Text style={[textStyles.title, styles.title]}>Welcome to VPT</Text>
                 <Text style={[textStyles.subtitle, styles.subtitle]}>
                   {isLogin ? 'Sign in to continue' : 'Create your account'}
@@ -280,14 +287,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  headerIcon: {
-    marginBottom: 16,
+  logoContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    overflow: 'hidden',
+    backgroundColor: '#000',
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: colors.card,
+  },
+  logo: {
+    width: '100%',
+    height: '100%',
   },
   title: {
     color: colors.card,
     textAlign: 'center',
     marginBottom: 8,
-    fontSize: 40,
+    fontSize: 32,
   },
   subtitle: {
     color: colors.card,

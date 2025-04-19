@@ -10,6 +10,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { colors, textStyles, layoutStyles } from '../styles/sharedStyles';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Header from '../components/Header';
 
 // Mock data for workout progress
 const mockWorkoutData = {
@@ -97,15 +98,7 @@ const ProgressScreen = () => {
 
   return (
     <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Icon name="arrow-back" size={24} color={colors.primary} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Progress</Text>
-      </View>
+      <Header title="Progress" />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.statsContainer}>
           {renderStatCard('Total Workouts', mockWorkoutData.totalWorkouts, 'barbell-outline')}
@@ -148,29 +141,6 @@ const ProgressScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
-    width: '100%',
-    position: 'relative',
-  },
-  backButton: {
-    position: 'absolute',
-    left: 16,
-    zIndex: 1,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: '600',
-    textAlign: 'center',
-    width: '100%',
-  },
   scrollView: {
     flex: 1,
     backgroundColor: colors.card,
