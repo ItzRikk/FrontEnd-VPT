@@ -21,11 +21,11 @@ const { width, height } = Dimensions.get('window');
 const CARD_MARGIN = spacing.xs;
 const CARD_WIDTH = (width - spacing.md * 2 - CARD_MARGIN * 2) / 2;
 
-const FrostedCard = ({ style, children, intensity = 60 }) => (
+const FrostedCard = ({ style, children, intensity = 25 }) => (
   <View style={[styles.frostedCardContainer, style]}>
     <BlurView
       intensity={intensity}
-      tint="default"
+      tint="light"
       style={StyleSheet.absoluteFill}
     />
     <View style={styles.frostedContent}>
@@ -36,7 +36,16 @@ const FrostedCard = ({ style, children, intensity = 60 }) => (
 
 const ActionCard = ({ icon, label, onPress, color = colors.primary }) => (
   <TouchableOpacity onPress={onPress} style={styles.actionCardContainer}>
-    <View style={[styles.actionCard, { borderColor: color }]}>
+    <View style={[styles.actionCard]}>
+      <LinearGradient
+        colors={[`${colors.primary}10`, `${colors.primary}05`]}
+        style={StyleSheet.absoluteFill}
+      />
+      <BlurView
+        intensity={40}
+        tint="light"
+        style={StyleSheet.absoluteFill}
+      />
       <View style={[styles.iconContainer, { backgroundColor: color }]}>
         <Icon name={icon} size={24} color={colors.card} />
       </View>
@@ -160,7 +169,16 @@ const ProfileScreen = ({ route, navigation }) => {
     <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
       <Header title="Profile" showBack={false} />
       <View style={styles.content}>
-        <View style={styles.welcomeCard}>
+        <View style={styles.cardWrapper}>
+          <LinearGradient
+            colors={[`${colors.primary}10`, `${colors.primary}05`]}
+            style={StyleSheet.absoluteFill}
+          />
+          <BlurView
+            intensity={40}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
           <View style={styles.welcomeHeader}>
             <View style={styles.userIconContainer}>
               <Icon name="person-circle-outline" size={24} color={colors.primary} />
@@ -185,7 +203,16 @@ const ProfileScreen = ({ route, navigation }) => {
           </View>
         </View>
 
-        <View style={styles.welcomeCard}>
+        <View style={styles.cardWrapper}>
+          <LinearGradient
+            colors={[`${colors.primary}10`, `${colors.primary}05`]}
+            style={StyleSheet.absoluteFill}
+          />
+          <BlurView
+            intensity={40}
+            tint="light"
+            style={StyleSheet.absoluteFill}
+          />
           <View style={styles.sectionHeader}>
             <Icon name="information-circle-outline" size={24} color={colors.primary} />
             <Text style={[textStyles.subtitle, styles.sectionTitle]}>Account Details</Text>
@@ -263,41 +290,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     paddingTop: spacing.md,
   },
-  frostedCardContainer: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
-    backgroundColor: colors.card,
-    marginBottom: 16,
-  },
-  frostedContent: {
-    padding: 16,
-  },
-  welcomeCard: {
+  cardWrapper: {
     marginHorizontal: spacing.md,
     marginBottom: spacing.md,
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.primary,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   welcomeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.primary,
-  },
-  userIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 87, 34, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.sm,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   experienceSection: {
     padding: spacing.md,
@@ -306,11 +320,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
+  userIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: `${colors.primary}15`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
+  },
   experienceIconContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 87, 34, 0.1)',
+    backgroundColor: `${colors.primary}15`,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.sm,
@@ -340,7 +363,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.primary,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
   },
   sectionTitle: {
     marginLeft: spacing.sm,
@@ -369,28 +392,38 @@ const styles = StyleSheet.create({
     margin: CARD_MARGIN,
   },
   actionCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
     alignItems: 'center',
+    overflow: 'hidden',
+    height: 120,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   iconContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(255, 87, 34, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
+    zIndex: 1,
   },
   actionLabel: {
     ...textStyles.subtitle,
     fontSize: 14,
     textAlign: 'center',
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text,
+    zIndex: 1,
   },
   nameText: {
     fontSize: 20,
