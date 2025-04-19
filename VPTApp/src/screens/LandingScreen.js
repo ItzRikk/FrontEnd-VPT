@@ -249,6 +249,30 @@ const LandingScreen = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
             </LinearGradient>
+
+            {/* Decorative Footer */}
+            <View style={styles.footerContainer}>
+              <View style={styles.footerIconRow}>
+                <View style={styles.footerIconWrapper}>
+                  <Icon name="barbell-outline" size={24} color={colors.primary} />
+                </View>
+                <View style={styles.footerIconWrapper}>
+                  <Icon name="bicycle-outline" size={24} color={colors.primary} />
+                </View>
+                <View style={styles.footerIconWrapper}>
+                  <Icon name="fitness-outline" size={24} color={colors.primary} />
+                </View>
+              </View>
+              <View style={styles.motivationContainer}>
+                <Text style={styles.motivationText}>
+                  "Transform your fitness journey with VPT"
+                </Text>
+                <View style={styles.motivationDivider} />
+                <Text style={styles.motivationSubtext}>
+                  Personalized workouts. Expert guidance. Real results.
+                </Text>
+              </View>
+            </View>
           </View>
         </KeyboardAvoidingView>
       </View>
@@ -267,9 +291,12 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
   welcomeCard: {
+    width: '100%',
+    maxWidth: 400,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#000000',
@@ -369,6 +396,51 @@ const styles = StyleSheet.create({
   switchButtonText: {
     color: colors.card,
     fontSize: 14,
+  },
+  footerContainer: {
+    width: '100%',
+    paddingVertical: 24,
+    alignItems: 'center',
+    marginTop: 32,
+  },
+  footerIconRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  footerIconWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: `${colors.primary}10`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 8,
+    borderWidth: 1,
+    borderColor: `${colors.primary}30`,
+  },
+  motivationContainer: {
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  motivationText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.primary,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  motivationDivider: {
+    width: 40,
+    height: 2,
+    backgroundColor: `${colors.primary}30`,
+    marginVertical: 8,
+  },
+  motivationSubtext: {
+    fontSize: 14,
+    color: colors.primary,
+    opacity: 0.8,
+    textAlign: 'center',
   },
 });
 
