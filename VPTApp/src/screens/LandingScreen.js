@@ -5,11 +5,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  KeyboardAvoidingView,
   Platform,
   Dimensions,
   Alert,
   Image,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, textStyles, buttonStyles, inputStyles, layoutStyles } from '../styles/sharedStyles';
@@ -159,9 +159,10 @@ const LandingScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
       <View style={styles.background}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardAvoidingView}
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
         >
           <View style={styles.content}>
             <LinearGradient
@@ -274,7 +275,7 @@ const LandingScreen = ({ navigation }) => {
               </View>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
@@ -285,8 +286,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  keyboardAvoidingView: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   content: {
     flex: 1,
