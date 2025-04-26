@@ -36,6 +36,12 @@ const SettingsScreen = ({ navigation }) => {
         
         if (error) {
           console.error('Error getting user:', error);
+          setUser(null);
+          setName('');
+          setEmail('');
+          setCurrentPassword('');
+          setNewPassword('');
+          setConfirmPassword('');
           navigation.navigate('Landing');
           return;
         }
@@ -43,10 +49,23 @@ const SettingsScreen = ({ navigation }) => {
         if (user) {
           setUser(user);
           setName(user.user_metadata?.name || '');
-          setEmail(user.email);
+          setEmail(user.email || '');
+        } else {
+          setUser(null);
+          setName('');
+          setEmail('');
         }
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
       } catch (error) {
         console.error('Error getting profile:', error);
+        setUser(null);
+        setName('');
+        setEmail('');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
         navigation.navigate('Landing');
       } finally {
         setLoading(false);
@@ -135,9 +154,11 @@ const SettingsScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              const { error } = await supabase.auth.admin.deleteUser(user.id);
+              const { error } = await supabase
+                .from('userProfile')
+                .delete()
+                .eq('user_id', user.id);
               if (error) throw error;
-              
               await supabase.auth.signOut();
               navigation.navigate('Landing');
             } catch (error) {

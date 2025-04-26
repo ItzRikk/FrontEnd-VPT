@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -72,6 +72,16 @@ const LandingScreen = ({ navigation }) => {
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [canAcceptTerms, setCanAcceptTerms] = useState(false);
+
+  // Reset all input fields when switching between login/signup or on mount
+  useEffect(() => {
+    setEmail('');
+    setPassword('');
+    setName('');
+    setUsername('');
+    setHasAcceptedTerms(false);
+    setCanAcceptTerms(false);
+  }, [isLogin]);
 
   const handleSubmit = async () => {
     if (loading) return;
