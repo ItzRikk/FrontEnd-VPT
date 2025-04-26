@@ -191,7 +191,7 @@ const ProfileScreen = ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
-      <Header title="Profile" showBack={false} />
+      <Header title="Profile" showBack={false} showSettings={true} />
       <View style={styles.content}>
         <View style={styles.cardWrapper}>
           <LinearGradient

@@ -332,6 +332,24 @@ const LandingScreen = ({ navigation }) => {
                       : 'Already have an account? Sign In'}
                   </Text>
                 </TouchableOpacity>
+
+                {isLogin && (
+                  <TouchableOpacity
+                    style={styles.forgotPasswordButton}
+                    onPress={() => navigation.navigate('ForgotPassword')}
+                    disabled={loading}
+                  >
+                    <Icon 
+                      name="key-outline" 
+                      size={16} 
+                      color={colors.card} 
+                      style={styles.forgotPasswordIcon}
+                    />
+                    <Text style={styles.forgotPasswordText}>
+                      Forgot Password?
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </LinearGradient>
 
@@ -485,6 +503,20 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   switchButtonText: {
+    color: colors.card,
+    fontSize: 14,
+  },
+  forgotPasswordButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  forgotPasswordIcon: {
+    marginRight: 8,
+    opacity: 0.8,
+  },
+  forgotPasswordText: {
     color: colors.card,
     fontSize: 14,
   },

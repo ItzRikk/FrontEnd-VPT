@@ -10,7 +10,7 @@ import { colors, spacing } from '../styles/sharedStyles';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const Header = ({ title = 'VPT', showBack = true }) => {
+const Header = ({ title = 'VPT', showBack = true, showSettings = false }) => {
   const navigation = useNavigation();
 
   return (
@@ -32,6 +32,14 @@ const Header = ({ title = 'VPT', showBack = true }) => {
           />
           <Text style={styles.headerTitle}>{title}</Text>
         </View>
+        {showSettings && (
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            onPress={() => navigation.navigate('Settings')}
+          >
+            <Icon name="settings-outline" size={24} color={colors.primary} />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -53,6 +61,11 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     left: spacing.md,
+    zIndex: 1,
+  },
+  settingsButton: {
+    position: 'absolute',
+    right: spacing.md,
     zIndex: 1,
   },
   titleContainer: {
