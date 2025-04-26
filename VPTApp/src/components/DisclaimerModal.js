@@ -33,8 +33,8 @@ const HealthQuestions = [
 
 const DisclaimerModal = ({ visible, onAccept, onClose }) => {
   const [isEndReached, setIsEndReached] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
   const scrollViewRef = useRef(null);
+  const hasCalledAccept = useRef(false);
 
   const handleScroll = ({ nativeEvent }) => {
     const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
@@ -44,12 +44,10 @@ const DisclaimerModal = ({ visible, onAccept, onClose }) => {
 
     if (isCloseToBottom && !isEndReached) {
       setIsEndReached(true);
-    }
-  };
-
-  const handleAccept = () => {
-    if (isEndReached && isChecked) {
-      onAccept();
+      if (!hasCalledAccept.current) {
+        onAccept();
+        hasCalledAccept.current = true;
+      }
     }
   };
 
@@ -184,38 +182,7 @@ const DisclaimerModal = ({ visible, onAccept, onClose }) => {
           </ScrollView>
 
           <View style={styles.footer}>
-            <View style={styles.checkboxWrapper}>
-              <TouchableOpacity 
-                style={styles.checkboxContainer} 
-                onPress={() => isEndReached && setIsChecked(!isChecked)}
-              >
-                <View style={[styles.checkbox, isChecked && styles.checked]}>
-                  {isChecked && <Icon name="checkmark" size={16} color="white" />}
-                </View>
-                <Text style={[
-                  styles.checkboxLabel,
-                  !isEndReached && styles.disabledText
-                ]}>
-                  I have read and agree to all terms
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={[
-                styles.acceptButton,
-                (!isEndReached || !isChecked) && styles.disabledButton
-              ]}
-              onPress={handleAccept}
-              disabled={!isEndReached || !isChecked}
-            >
-              <Text style={[
-                styles.acceptButtonText,
-                (!isEndReached || !isChecked) && styles.disabledText
-              ]}>
-                Accept & Continue
-              </Text>
-            </TouchableOpacity>
+            {/* No checkbox or accept button here, just a close button in the header */}
           </View>
         </View>
       </View>
@@ -310,50 +277,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingTop: spacing.md,
-  },
-  checkboxWrapper: {
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    marginRight: spacing.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checked: {
-    backgroundColor: colors.primary,
-  },
-  checkboxLabel: {
-    fontSize: 16,
-    color: colors.text,
-    textAlign: 'center',
-  },
-  acceptButton: {
-    backgroundColor: colors.primary,
-    padding: spacing.md,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  disabledButton: {
-    backgroundColor: colors.border,
-  },
-  acceptButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  disabledText: {
-    color: colors.textLight,
   },
   healthQuestionsSection: {
     backgroundColor: '#FFF5F5',

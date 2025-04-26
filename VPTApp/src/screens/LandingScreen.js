@@ -67,9 +67,11 @@ const LandingScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
+  const [canAcceptTerms, setCanAcceptTerms] = useState(false);
 
   const handleSubmit = async () => {
     if (loading) return;
@@ -90,58 +92,15 @@ const LandingScreen = ({ navigation }) => {
         if (data?.user) {
           console.log('User logged in:', data.user.id);
           
-          // Check if user has already accepted terms
-          const { data: profileData, error: profileError } = await supabase
-            .from('userProfile')
-            .select('terms_accepted_at')
-            .eq('user_id', data.user.id)
-            .single();
-
-          if (profileError) {
-            console.error('Error checking terms acceptance:', profileError);
-          }
-
-          // If terms not accepted yet, show disclaimer
-          if (!profileData?.terms_accepted_at && !hasAcceptedTerms) {
-            setShowDisclaimer(true);
-            return;
-          }
-
-          // Update terms acceptance if they just accepted
-          if (hasAcceptedTerms) {
-            const { error: termsError } = await supabase
-              .from('userProfile')
-              .update({ terms_accepted_at: true })
-              .eq('user_id', data.user.id);
-
-            if (termsError) {
-              console.error('Error updating terms acceptance:', termsError);
-            }
-          }
-
-          // Continue with login flow
-          const { data: questionnaireData, error: questionnaireError } = await supabase
-            .from('questionnaire_answers')
-            .select('experience_level')
-            .eq('user_id', data.user.id)
-            .single();
-
-          if (!questionnaireError && questionnaireData) {
-            const { error: updateError } = await supabase.auth.updateUser({
-              data: {
-                experience_level: questionnaireData.experience_level
-              }
-            });
-            if (updateError) {
-              console.error('Update user metadata error:', updateError);
-            }
-          }
-
           navigation.navigate('Profile');
         }
       } else {
         if (!name.trim()) {
           Alert.alert('Error', 'Please enter your name');
+          return;
+        }
+        if (!username.trim()) {
+          Alert.alert('Error', 'Please enter a username');
           return;
         }
         if (!email.trim()) {
@@ -156,19 +115,22 @@ const LandingScreen = ({ navigation }) => {
           Alert.alert('Error', 'Password must be at least 6 characters long');
           return;
         }
-        if (!hasAcceptedTerms) {
+        if (!hasAcceptedTerms && !isLogin) {
           Alert.alert('Error', 'Please accept the terms and conditions');
           return;
         }
 
+        // Create user in Supabase Auth
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password: password.trim(),
           options: {
             data: {
               name: name.trim(),
+              username: username.trim(),
             },
-          },
+            emailRedirectTo: 'vpt://auth/callback'
+          }
         });
         
         if (error) {
@@ -177,19 +139,27 @@ const LandingScreen = ({ navigation }) => {
         }
         
         if (data?.user) {
-          // Create user profile with terms acceptance
+          // Insert into userProfile
           const { error: profileError } = await supabase
             .from('userProfile')
             .insert({
               user_id: data.user.id,
-              terms_accepted_at: true
+              email: email.trim(),
+              name: name.trim(),
+              username: username.trim(),
+              terms_accepted_at: true,
+              is_admin: false
             });
 
           if (profileError) {
-            console.error('Error creating user profile:', profileError);
+            Alert.alert('Profile Error', profileError.message);
+            return;
           }
 
-          Alert.alert('Success', 'Please check your email for verification link');
+          Alert.alert(
+            'Success',
+            'Account created! Please check your email for the verification link.'
+          );
           setIsLogin(true);
         }
       }
@@ -209,14 +179,6 @@ const LandingScreen = ({ navigation }) => {
     if (isLogin) {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (!userError && user) {
-        const { error: termsError } = await supabase
-          .from('userProfile')
-          .update({ terms_accepted_at: true })
-          .eq('user_id', user.id);
-
-        if (termsError) {
-          console.error('Error updating terms acceptance:', termsError);
-        }
         navigation.navigate('Profile');
       }
     } else {
@@ -265,6 +227,17 @@ const LandingScreen = ({ navigation }) => {
                   />
                 )}
 
+                {!isLogin && (
+                  <InputField
+                    icon="at-outline"
+                    placeholder="Username"
+                    value={username}
+                    onChangeText={setUsername}
+                    autoCapitalize="none"
+                    autoComplete="username"
+                  />
+                )}
+
                 <InputField
                   icon="mail-outline"
                   placeholder="Email"
@@ -284,20 +257,25 @@ const LandingScreen = ({ navigation }) => {
                   isPassword
                 />
 
-                <TouchableOpacity
-                  style={styles.termsButton}
-                  onPress={() => setShowDisclaimer(true)}
-                >
-                  <Icon 
-                    name="document-text-outline" 
-                    size={16} 
-                    color={colors.card} 
-                    style={styles.termsIcon}
-                  />
-                  <Text style={styles.termsText}>
-                    Terms & Conditions
-                  </Text>
-                </TouchableOpacity>
+                {/* Terms acceptance for signup only, directly under password */}
+                {!isLogin && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+                    <TouchableOpacity
+                      style={[
+                        styles.checkbox,
+                        hasAcceptedTerms && styles.checked,
+                        !canAcceptTerms && { opacity: 0.5 }
+                      ]}
+                      onPress={() => canAcceptTerms && setHasAcceptedTerms(!hasAcceptedTerms)}
+                      disabled={!canAcceptTerms}
+                    >
+                      {hasAcceptedTerms && <Icon name="checkmark" size={16} color="white" />}
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setShowDisclaimer(true)}>
+                      <Text style={[styles.termsText, { textDecorationLine: 'none' }]}>Terms & Conditions</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
 
                 <TouchableOpacity
                   style={[styles.submitButton]}
@@ -354,33 +332,52 @@ const LandingScreen = ({ navigation }) => {
             </LinearGradient>
 
             {/* Decorative Footer */}
-            <View style={styles.footerContainer}>
-              <View style={styles.footerIconRow}>
-                <View style={styles.footerIconWrapper}>
-                  <Icon name="barbell-outline" size={24} color={colors.primary} />
+            {isLogin ? (
+              <View style={styles.footerContainer}>
+                <View style={styles.footerIconRow}>
+                  <View style={styles.footerIconWrapper}>
+                    <Icon name="barbell-outline" size={20} color={colors.primary} />
+                  </View>
+                  <View style={styles.footerIconWrapper}>
+                    <Icon name="bicycle-outline" size={20} color={colors.primary} />
+                  </View>
+                  <View style={styles.footerIconWrapper}>
+                    <Icon name="fitness-outline" size={20} color={colors.primary} />
+                  </View>
                 </View>
-                <View style={styles.footerIconWrapper}>
-                  <Icon name="bicycle-outline" size={24} color={colors.primary} />
-                </View>
-                <View style={styles.footerIconWrapper}>
-                  <Icon name="fitness-outline" size={24} color={colors.primary} />
+                <View style={styles.motivationContainer}>
+                  <Text style={styles.motivationText}>
+                    "Transform your fitness journey with VPT"
+                  </Text>
+                  <View style={styles.motivationDivider} />
+                  <Text style={styles.motivationSubtext}>
+                    Personalized workouts. Expert guidance. Real results.
+                  </Text>
                 </View>
               </View>
-              <View style={styles.motivationContainer}>
-                <Text style={styles.motivationText}>
-                  "Transform your fitness journey with VPT"
-                </Text>
-                <View style={styles.motivationDivider} />
-                <Text style={styles.motivationSubtext}>
-                  Personalized workouts. Expert guidance. Real results.
-                </Text>
+            ) : (
+              <View style={styles.footerContainer}>
+                <View style={styles.footerIconRow}>
+                  <View style={styles.footerIconWrapper}>
+                    <Icon name="barbell-outline" size={20} color={colors.primary} />
+                  </View>
+                  <View style={styles.footerIconWrapper}>
+                    <Icon name="bicycle-outline" size={20} color={colors.primary} />
+                  </View>
+                  <View style={styles.footerIconWrapper}>
+                    <Icon name="fitness-outline" size={20} color={colors.primary} />
+                  </View>
+                </View>
               </View>
-            </View>
+            )}
           </View>
         </ScrollView>
         <DisclaimerModal
           visible={showDisclaimer}
-          onAccept={handleDisclaimerAccept}
+          onAccept={() => {
+            setShowDisclaimer(false);
+            setCanAcceptTerms(true);
+          }}
           onClose={() => setShowDisclaimer(false)}
         />
       </View>
@@ -529,29 +526,53 @@ const styles = StyleSheet.create({
   footerIconRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
   },
   footerIconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: `${colors.primary}10`,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 8,
+    marginHorizontal: 12,
     borderWidth: 1,
     borderColor: `${colors.primary}30`,
   },
+  termsText: {
+    color: colors.card,
+    fontSize: 14,
+    textDecorationLine: 'underline',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: colors.card,
+    marginRight: 8,
+  },
+  checked: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
   motivationContainer: {
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: 16,
+    marginTop: 12,
   },
   motivationText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: colors.primary,
     textAlign: 'center',
     fontStyle: 'italic',
+    marginBottom: 4,
   },
   motivationDivider: {
     width: 40,
@@ -560,25 +581,11 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   motivationSubtext: {
-    fontSize: 14,
+    fontSize: 12,
     color: colors.primary,
     opacity: 0.8,
     textAlign: 'center',
-  },
-  termsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-    opacity: 0.8,
-  },
-  termsIcon: {
-    marginRight: 8,
-  },
-  termsText: {
-    color: colors.card,
-    fontSize: 14,
-    textDecorationLine: 'underline',
+    marginTop: 0,
   },
 });
 
