@@ -17,6 +17,7 @@ import { supabase } from '../api/supabaseClient';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/Ionicons';
+import DisclaimerModal from '../components/DisclaimerModal';
 
 const { width, height } = Dimensions.get('window');
 
@@ -67,6 +68,8 @@ const LandingScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
 
   const handleSubmit = async () => {
     if (loading) return;
@@ -87,25 +90,51 @@ const LandingScreen = ({ navigation }) => {
         if (data?.user) {
           console.log('User logged in:', data.user.id);
           
-          // Fetch user's experience level
-          const { data: questionnaireData, error: questionnaireError } = await supabase
-            .from('questionnaire_answers')
-            .select('experience_level, experience_description')
+          // Check if user has already accepted terms
+          const { data: profileData, error: profileError } = await supabase
+            .from('userProfile')
+            .select('terms_accepted_at')
             .eq('user_id', data.user.id)
             .single();
 
-          console.log('Fetched questionnaire data:', questionnaireData);
-          console.log('Questionnaire error:', questionnaireError);
+          if (profileError) {
+            console.error('Error checking terms acceptance:', profileError);
+          }
+
+          // If terms not accepted yet, show disclaimer
+          if (!profileData?.terms_accepted_at && !hasAcceptedTerms) {
+            setShowDisclaimer(true);
+            return;
+          }
+
+          // Update terms acceptance if they just accepted
+          if (hasAcceptedTerms) {
+            const { error: termsError } = await supabase
+              .from('userProfile')
+              .update({ terms_accepted_at: true })
+              .eq('user_id', data.user.id);
+
+            if (termsError) {
+              console.error('Error updating terms acceptance:', termsError);
+            }
+          }
+
+          // Continue with login flow
+          const { data: questionnaireData, error: questionnaireError } = await supabase
+            .from('questionnaire_answers')
+            .select('experience_level')
+            .eq('user_id', data.user.id)
+            .single();
 
           if (!questionnaireError && questionnaireData) {
-            console.log('Updating user metadata with experience level:', questionnaireData);
             const { error: updateError } = await supabase.auth.updateUser({
               data: {
-                experience_level: questionnaireData.experience_level,
-                experience_description: questionnaireData.experience_description
+                experience_level: questionnaireData.experience_level
               }
             });
-            console.log('Update user metadata error:', updateError);
+            if (updateError) {
+              console.error('Update user metadata error:', updateError);
+            }
           }
 
           navigation.navigate('Profile');
@@ -127,6 +156,10 @@ const LandingScreen = ({ navigation }) => {
           Alert.alert('Error', 'Password must be at least 6 characters long');
           return;
         }
+        if (!hasAcceptedTerms) {
+          Alert.alert('Error', 'Please accept the terms and conditions');
+          return;
+        }
 
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
@@ -144,15 +177,51 @@ const LandingScreen = ({ navigation }) => {
         }
         
         if (data?.user) {
+          // Create user profile with terms acceptance
+          const { error: profileError } = await supabase
+            .from('userProfile')
+            .insert({
+              user_id: data.user.id,
+              terms_accepted_at: true
+            });
+
+          if (profileError) {
+            console.error('Error creating user profile:', profileError);
+          }
+
           Alert.alert('Success', 'Please check your email for verification link');
           setIsLogin(true);
         }
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login/Signup error:', error);
       Alert.alert('Error', error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDisclaimerAccept = async () => {
+    setHasAcceptedTerms(true);
+    setShowDisclaimer(false);
+    
+    // For login, we need to update the database and then navigate
+    if (isLogin) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (!userError && user) {
+        const { error: termsError } = await supabase
+          .from('userProfile')
+          .update({ terms_accepted_at: true })
+          .eq('user_id', user.id);
+
+        if (termsError) {
+          console.error('Error updating terms acceptance:', termsError);
+        }
+        navigation.navigate('Profile');
+      }
+    } else {
+      // For signup, continue with the signup flow
+      handleSubmit();
     }
   };
 
@@ -216,6 +285,21 @@ const LandingScreen = ({ navigation }) => {
                 />
 
                 <TouchableOpacity
+                  style={styles.termsButton}
+                  onPress={() => setShowDisclaimer(true)}
+                >
+                  <Icon 
+                    name="document-text-outline" 
+                    size={16} 
+                    color={colors.card} 
+                    style={styles.termsIcon}
+                  />
+                  <Text style={styles.termsText}>
+                    Terms & Conditions
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
                   style={[styles.submitButton]}
                   onPress={handleSubmit}
                   disabled={loading}
@@ -276,6 +360,11 @@ const LandingScreen = ({ navigation }) => {
             </View>
           </View>
         </ScrollView>
+        <DisclaimerModal
+          visible={showDisclaimer}
+          onAccept={handleDisclaimerAccept}
+          onClose={() => setShowDisclaimer(false)}
+        />
       </View>
     </SafeAreaView>
   );
@@ -443,6 +532,21 @@ const styles = StyleSheet.create({
     color: colors.primary,
     opacity: 0.8,
     textAlign: 'center',
+  },
+  termsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    opacity: 0.8,
+  },
+  termsIcon: {
+    marginRight: 8,
+  },
+  termsText: {
+    color: colors.card,
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
 });
 

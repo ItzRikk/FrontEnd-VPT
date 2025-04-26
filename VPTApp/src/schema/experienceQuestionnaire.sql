@@ -5,6 +5,8 @@ CREATE TABLE users (
     user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
+    terms_accepted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    terms_version VARCHAR(50) DEFAULT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -59,6 +61,20 @@ CREATE TABLE user_responses (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- User agreements table to track terms acceptance
+CREATE TABLE user_agreements (
+    agreement_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES user_profile(user_id) ON DELETE CASCADE,
+    terms_version VARCHAR(50) NOT NULL,
+    accepted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, terms_version)
+);
+
+-- Add terms acceptance column to user_profile table
+ALTER TABLE user_profile
+ADD COLUMN terms_accepted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+ADD COLUMN terms_version VARCHAR(50) DEFAULT NULL;
+
 -- Insert initial questions data
 INSERT INTO questions (question_id, question_text, question_description, question_order)
 VALUES 
@@ -101,4 +117,10 @@ VALUES
 -- JOIN questions q ON ur.question_id = q.question_id
 -- JOIN options o ON ur.selected_option_id = o.option_id
 -- WHERE ur.session_id = 'some-session-id'
--- ORDER BY q.question_order; 
+-- ORDER BY q.question_order;
+
+-- Example query: Check if user has accepted terms
+-- SELECT user_id, terms_accepted_at, terms_version 
+-- FROM user_profile 
+-- WHERE user_id = 'some-user-id'
+-- AND terms_accepted_at IS NOT NULL; 

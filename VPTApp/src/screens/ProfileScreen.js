@@ -93,22 +93,42 @@ const ProfileScreen = ({ route, navigation }) => {
         if (user) {
           setUser(user);
           
-          // Fetch experience level from questionnaire_answers
+          // Check if user has completed questionnaire
           const { data: questionnaireData, error: questionnaireError } = await supabase
             .from('questionnaire_answers')
             .select('experience_level')
             .eq('user_id', user.id)
             .single();
 
+          // If no questionnaire data found and user is new (check created_at from userProfile)
+          if (!questionnaireData) {
+            const { data: profileData } = await supabase
+              .from('userProfile')
+              .select('created_at')
+              .eq('user_id', user.id)
+              .single();
+
+            // If profile was created in the last 5 minutes, consider them a new user
+            if (profileData) {
+              const createdAt = new Date(profileData.created_at);
+              const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+              
+              if (createdAt > fiveMinutesAgo) {
+                // New user, redirect to questionnaire
+                navigation.navigate('Questionnaire');
+                return;
+              }
+            }
+          }
+
+          // Set experience level if exists
           if (!questionnaireError && questionnaireData) {
-            // Get description based on level
             const description = getExperienceDescription(questionnaireData.experience_level);
             setExperienceLevel({
               level: questionnaireData.experience_level,
               description: description
             });
           } else if (user.user_metadata?.experience_level) {
-            // Fallback to user metadata if questionnaire data not found
             const description = getExperienceDescription(user.user_metadata.experience_level);
             setExperienceLevel({
               level: user.user_metadata.experience_level,
@@ -129,7 +149,11 @@ const ProfileScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     if (route.params?.questionnaireResults) {
-      setExperienceLevel(route.params.questionnaireResults.experienceLevel);
+      const { experienceLevel } = route.params.questionnaireResults;
+      setExperienceLevel({
+        level: experienceLevel.level,
+        description: getExperienceDescription(experienceLevel.level)
+      });
     }
   }, [route.params?.questionnaireResults]);
 

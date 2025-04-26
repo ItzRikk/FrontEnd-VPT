@@ -86,8 +86,8 @@ const ExperienceQuestionnaireScreen = () => {
   const determineExperienceLevel = (points) => {
     if (points <= 3) return { level: 'Novice', description: 'You are at the beginning of your weight lifting journey' };
     if (points === 4) return { level: 'Intermediate', description: 'You have some experience with weight lifting' };
-    if (points === 5) return { level: 'Advanced', description: 'You have significant experience with weight lifting' };
-    return { level: 'Unknown', description: 'Unable to determine experience level' };
+    if (points === 5) return { level: 'Advance', description: 'You have significant experience with weight lifting' };
+    return { level: 'Novice', description: 'Unable to determine experience level' };
   };
 
   const handleAnswer = (questionId, answerId) => {
@@ -161,12 +161,28 @@ const ExperienceQuestionnaireScreen = () => {
         console.error('Update error:', updateError);
         throw updateError;
       }
+
+      // Update userProfile table with experience level
+      const { error: profileError } = await supabase
+        .from('userProfile')
+        .upsert({
+          user_id: user.id,
+          email: user.email,
+          name: user.user_metadata.name,
+          level: experienceLevel.level // Using numeric level ID that matches the level table
+        });
+
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw profileError;
+      }
       
-      navigation.navigate('Profile', { 
+      navigation.navigate('Profile', {
         questionnaireResults: {
-          answers,
-          totalPoints,
-          experienceLevel
+          experienceLevel: {
+            level: experienceLevel.level,
+            description: experienceLevel.description
+          }
         }
       });
     } catch (error) {

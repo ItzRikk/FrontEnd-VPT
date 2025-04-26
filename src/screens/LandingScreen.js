@@ -11,19 +11,38 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DisclaimerModal from '../components/DisclaimerModal';
 
 const LandingScreen = ({ navigation }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
 
   const handleSubmit = () => {
+    if (!hasAcceptedTerms) {
+      setShowDisclaimer(true);
+      return;
+    }
+
     if (isLogin) {
       // Handle login logic here
       console.log('Login:', { email, password });
     } else {
       // Handle signup logic here
+      console.log('Signup:', { name, email, password });
+    }
+  };
+
+  const handleDisclaimerAccept = () => {
+    setHasAcceptedTerms(true);
+    setShowDisclaimer(false);
+    // Proceed with login/signup
+    if (isLogin) {
+      console.log('Login:', { email, password });
+    } else {
       console.log('Signup:', { name, email, password });
     }
   };
@@ -68,7 +87,19 @@ const LandingScreen = ({ navigation }) => {
               secureTextEntry
             />
 
-            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+            <TouchableOpacity
+              style={styles.termsButton}
+              onPress={() => setShowDisclaimer(true)}
+            >
+              <Text style={styles.termsText}>
+                Terms & Conditions
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.button} 
+              onPress={handleSubmit}
+            >
               <Text style={styles.buttonText}>
                 {isLogin ? 'Sign In' : 'Create Account'}
               </Text>
@@ -87,6 +118,12 @@ const LandingScreen = ({ navigation }) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <DisclaimerModal
+        visible={showDisclaimer}
+        onAccept={handleDisclaimerAccept}
+        onClose={() => setShowDisclaimer(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -147,6 +184,15 @@ const styles = StyleSheet.create({
   switchText: {
     color: '#007AFF',
     fontSize: 14,
+  },
+  termsButton: {
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  termsText: {
+    color: '#007AFF',
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
 });
 
