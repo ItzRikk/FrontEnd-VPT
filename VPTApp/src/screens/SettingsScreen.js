@@ -16,13 +16,11 @@ const SettingsScreen = () => {
 
   const handleUpdateProfile = async () => {
     try {
-      // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
         Alert.alert('Error', 'Could not get user');
         return;
       }
-      // Update userProfile
       const updates = {};
       if (name.trim()) updates.name = name.trim();
       if (username.trim()) updates.username = username.trim();
@@ -36,6 +34,8 @@ const SettingsScreen = () => {
         .eq('user_id', user.id);
       if (error) throw error;
       Alert.alert('Success', 'Profile updated successfully');
+      setName('');
+      setUsername('');
     } catch (error) {
       console.error('Error updating profile:', error);
       Alert.alert('Error', error.message);
@@ -76,6 +76,9 @@ const SettingsScreen = () => {
       });
       if (updateError) throw updateError;
       Alert.alert('Success', 'Password updated successfully');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (error) {
       console.error('Error updating password:', error);
       Alert.alert('Error', error.message);
