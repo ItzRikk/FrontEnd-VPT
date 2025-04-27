@@ -20,6 +20,7 @@ const SettingsScreen = ({ navigation }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -27,6 +28,27 @@ const SettingsScreen = ({ navigation }) => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const clearAllFields = () => {
+    setName('');
+    setUsername('');
+    setEmail('');
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+  };
+
+  // Clear fields when navigating away
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('blur', () => {
+      clearAllFields();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -37,35 +59,23 @@ const SettingsScreen = ({ navigation }) => {
         if (error) {
           console.error('Error getting user:', error);
           setUser(null);
-          setName('');
-          setEmail('');
-          setCurrentPassword('');
-          setNewPassword('');
-          setConfirmPassword('');
+          clearAllFields();
           navigation.navigate('Landing');
           return;
         }
         
         if (user) {
           setUser(user);
-          setName(user.user_metadata?.name || '');
+          clearAllFields();
           setEmail(user.email || '');
         } else {
           setUser(null);
-          setName('');
-          setEmail('');
+          clearAllFields();
         }
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
       } catch (error) {
         console.error('Error getting profile:', error);
         setUser(null);
-        setName('');
-        setEmail('');
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
+        clearAllFields();
         navigation.navigate('Landing');
       } finally {
         setLoading(false);
@@ -75,23 +85,38 @@ const SettingsScreen = ({ navigation }) => {
     getCurrentUser();
   }, []);
 
-  const handleUpdateName = async () => {
-    if (!name.trim()) {
-      Alert.alert('Error', 'Please enter your name');
+  const handleUpdateProfile = async () => {
+    if (!name.trim() && !username.trim()) {
+      Alert.alert('Error', 'Please enter a name or username');
       return;
     }
-
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: { name: name.trim() }
-      });
-
-      if (error) throw error;
-
-      Alert.alert('Success', 'Name updated successfully');
+      let updateError = null;
+      // Update name in Auth if provided
+      if (name.trim()) {
+        const { error } = await supabase.auth.updateUser({
+          data: { name: name.trim() }
+        });
+        if (error) updateError = error;
+      }
+      // Update name and/or username in userProfile
+      const updates = {};
+      if (name.trim()) updates.name = name.trim();
+      if (username.trim()) updates.username = username.trim();
+      if (Object.keys(updates).length > 0) {
+        const { error } = await supabase
+          .from('userProfile')
+          .update(updates)
+          .eq('user_id', user.id);
+        if (error) updateError = error;
+      }
+      if (updateError) throw updateError;
+      Alert.alert('Success', 'Profile updated successfully');
+      clearAllFields();
     } catch (error) {
-      console.error('Error updating name:', error);
+      console.error('Error updating profile:', error);
       Alert.alert('Error', error.message);
+      clearAllFields();
     }
   };
 
@@ -103,11 +128,13 @@ const SettingsScreen = ({ navigation }) => {
 
     if (newPassword !== confirmPassword) {
       Alert.alert('Error', 'New passwords do not match');
+      clearAllFields();
       return;
     }
 
     if (newPassword.length < 6) {
       Alert.alert('Error', 'Password must be at least 6 characters long');
+      clearAllFields();
       return;
     }
 
@@ -120,6 +147,7 @@ const SettingsScreen = ({ navigation }) => {
 
       if (signInError) {
         Alert.alert('Error', 'Current password is incorrect');
+        clearAllFields();
         return;
       }
 
@@ -131,12 +159,11 @@ const SettingsScreen = ({ navigation }) => {
       if (updateError) throw updateError;
 
       Alert.alert('Success', 'Password updated successfully');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      clearAllFields();
     } catch (error) {
       console.error('Error updating password:', error);
       Alert.alert('Error', error.message);
+      clearAllFields();
     }
   };
 
@@ -197,8 +224,19 @@ const SettingsScreen = ({ navigation }) => {
               autoCapitalize="words"
             />
           </View>
-          <TouchableOpacity style={styles.button} onPress={handleUpdateName}>
-            <Text style={styles.buttonText}>Update Name</Text>
+          <View style={styles.inputContainer}>
+            <Icon name="person-outline" size={20} color={colors.primary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Username"
+              placeholderTextColor={colors.textSecondary}
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+            />
+          </View>
+          <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
+            <Text style={styles.buttonText}>Update</Text>
           </TouchableOpacity>
         </SettingSection>
 

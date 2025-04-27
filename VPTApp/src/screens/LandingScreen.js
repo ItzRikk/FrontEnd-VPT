@@ -73,7 +73,17 @@ const LandingScreen = ({ navigation }) => {
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [canAcceptTerms, setCanAcceptTerms] = useState(false);
 
-  // Reset all input fields when switching between login/signup or on mount
+  // Clear all input fields when component mounts
+  useEffect(() => {
+    setEmail('');
+    setPassword('');
+    setName('');
+    setUsername('');
+    setHasAcceptedTerms(false);
+    setCanAcceptTerms(false);
+  }, []);
+
+  // Reset all input fields when switching between login/signup
   useEffect(() => {
     setEmail('');
     setPassword('');
@@ -89,19 +99,46 @@ const LandingScreen = ({ navigation }) => {
     try {
       setLoading(true);
       if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password: password.trim(),
-        });
+        // Check if input is email or username
+        const isEmail = email.includes('@');
+        let authData;
+
+        if (isEmail) {
+          // Login with email
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password: password.trim(),
+          });
+          authData = { data, error };
+        } else {
+          // Login with username
+          // First get the user's email from the userProfile table
+          const { data: profileData, error: profileError } = await supabase
+            .from('userProfile')
+            .select('email')
+            .eq('username', email.trim())
+            .single();
+
+          if (profileError || !profileData) {
+            Alert.alert('Login Error', 'Invalid username or password');
+            return;
+          }
+
+          // Then sign in with the email
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: profileData.email,
+            password: password.trim(),
+          });
+          authData = { data, error };
+        }
         
-        if (error) {
-          Alert.alert('Login Error', error.message);
+        if (authData.error) {
+          Alert.alert('Login Error', authData.error.message);
           return;
         }
         
-        if (data?.user) {
-          console.log('User logged in:', data.user.id);
-          
+        if (authData.data?.user) {
+          console.log('User logged in:', authData.data.user.id);
           navigation.navigate('Profile');
         }
       } else {
@@ -163,6 +200,13 @@ const LandingScreen = ({ navigation }) => {
 
           if (profileError) {
             Alert.alert('Profile Error', profileError.message);
+            // Clear fields on error
+            setEmail('');
+            setPassword('');
+            setName('');
+            setUsername('');
+            setHasAcceptedTerms(false);
+            setCanAcceptTerms(false);
             return;
           }
 
@@ -170,12 +214,26 @@ const LandingScreen = ({ navigation }) => {
             'Success',
             'Account created! Please check your email for the verification link.'
           );
+          // Clear all fields after successful signup
+          setEmail('');
+          setPassword('');
+          setName('');
+          setUsername('');
+          setHasAcceptedTerms(false);
+          setCanAcceptTerms(false);
           setIsLogin(true);
         }
       }
     } catch (error) {
       console.error('Login/Signup error:', error);
       Alert.alert('Error', error.message);
+      // Clear fields on error
+      setEmail('');
+      setPassword('');
+      setName('');
+      setUsername('');
+      setHasAcceptedTerms(false);
+      setCanAcceptTerms(false);
     } finally {
       setLoading(false);
     }
@@ -250,7 +308,7 @@ const LandingScreen = ({ navigation }) => {
 
                 <InputField
                   icon="mail-outline"
-                  placeholder="Email"
+                  placeholder="Email or Username"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
