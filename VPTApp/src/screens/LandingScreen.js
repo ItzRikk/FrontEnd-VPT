@@ -655,10 +655,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.card,
     marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   checked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: '#333', // dark grey
+    borderColor: '#333', // dark grey
   },
   motivationContainer: {
     alignItems: 'center',

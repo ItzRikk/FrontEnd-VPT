@@ -44,10 +44,6 @@ const DisclaimerModal = ({ visible, onAccept, onClose }) => {
 
     if (isCloseToBottom && !isEndReached) {
       setIsEndReached(true);
-      if (!hasCalledAccept.current) {
-        onAccept();
-        hasCalledAccept.current = true;
-      }
     }
   };
 
@@ -124,8 +120,16 @@ const DisclaimerModal = ({ visible, onAccept, onClose }) => {
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <Text style={styles.title}>Terms & Disclaimer</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Icon name="close" size={24} color={colors.primary} />
+            <TouchableOpacity 
+              onPress={isEndReached ? () => { onAccept && onAccept(); onClose && onClose(); } : undefined}
+              style={styles.closeButton}
+              disabled={!isEndReached}
+            >
+              <Icon 
+                name="close" 
+                size={24} 
+                color={isEndReached ? colors.primary : '#aaa'} 
+              />
             </TouchableOpacity>
           </View>
           
