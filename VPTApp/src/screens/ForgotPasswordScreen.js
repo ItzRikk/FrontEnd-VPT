@@ -13,10 +13,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, textStyles } from '../styles/sharedStyles';
-import { supabase } from '../api/supabaseClient';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { supabase } from '../api/supabaseClient';
 
 const { width, height } = Dimensions.get('window');
 
@@ -51,21 +51,31 @@ const ForgotPasswordScreen = ({ navigation }) => {
   const handleResetPassword = async () => {
     if (loading) return;
 
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter your email address');
+      return;
+    }
+
     try {
       setLoading(true);
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: 'vpt://reset-password',
+      const response = await fetch('https://ifkmefcurfniuefcolgr.supabase.co/functions/v1/send-password-reset-email', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.SUPABASE_ANON_KEY || supabase.supabaseKey}`
+        },
+        body: JSON.stringify({ email: email.trim() }),
       });
 
-      if (error) {
-        Alert.alert('Error', error.message);
-        return;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to send reset code');
       }
 
       Alert.alert(
         'Success',
-        'Password reset instructions have been sent to your email address.',
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
+        'A verification code has been sent to your email. Please check your inbox and use the code to reset your password.',
+        [{ text: 'OK', onPress: () => navigation.navigate('ResetPassword', { email: email.trim() }) }]
       );
     } catch (error) {
       console.error('Reset password error:', error);

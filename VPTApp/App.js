@@ -10,7 +10,6 @@ import AppNavigator from './src/navigation/AppNavigator';
 //<UsersList />
 
 export default function App() {
- 
   return (
     <SafeAreaProvider>
       <NavigationContainer>
