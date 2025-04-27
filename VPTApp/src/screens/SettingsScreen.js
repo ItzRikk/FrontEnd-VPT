@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, TextInput, SafeAreaView, Text, TouchableOpacity, Alert, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, TextInput, SafeAreaView, Text, TouchableOpacity, Alert, TouchableWithoutFeedback, Keyboard, StyleSheet, ScrollView } from 'react-native';
 import { supabase } from '../api/supabaseClient';
 import Header from '../components/Header';
+import { colors, spacing, textStyles } from '../styles/sharedStyles';
 
 const SettingsScreen = () => {
   const [name, setName] = useState('');
@@ -82,113 +83,169 @@ const SettingsScreen = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.background}>
         <Header title="Settings" showBack={true} />
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text>Minimal Test</Text>
-          <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: '#333',
-              borderRadius: 8,
-              padding: 10,
-              width: 250,
-              fontSize: 18,
-              marginBottom: 10,
-            }}
-            placeholder="Full Name"
-            value={name}
-            onChangeText={setName}
-          />
-          <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: '#333',
-              borderRadius: 8,
-              padding: 10,
-              width: 250,
-              fontSize: 18,
-              marginBottom: 20,
-            }}
-            placeholder="Username"
-            value={username}
-            onChangeText={setUsername}
-          />
-          <TouchableOpacity
-            style={{
-              backgroundColor: '#333',
-              paddingVertical: 12,
-              paddingHorizontal: 32,
-              borderRadius: 8,
-              marginBottom: 30,
-            }}
-            onPress={handleUpdateProfile}
-          >
-            <Text style={{ color: 'white', fontSize: 18 }}>Update</Text>
-          </TouchableOpacity>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Account Information</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                placeholderTextColor={colors.textSecondary}
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
+                autoCorrect={false}
+                autoComplete="off"
+                textContentType="name"
+                importantForAutofill="no"
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Username"
+                placeholderTextColor={colors.textSecondary}
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+                textContentType="username"
+                importantForAutofill="no"
+              />
+            </View>
+            <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
+              <Text style={styles.buttonText}>Update</Text>
+            </TouchableOpacity>
+          </View>
 
-          {/* Change Password Section */}
-          <Text style={{ fontSize: 18, marginBottom: 10 }}>Change Password</Text>
-          <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: '#333',
-              borderRadius: 8,
-              padding: 10,
-              width: 250,
-              fontSize: 18,
-              marginBottom: 10,
-            }}
-            placeholder="Current Password"
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-            secureTextEntry
-          />
-          <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: '#333',
-              borderRadius: 8,
-              padding: 10,
-              width: 250,
-              fontSize: 18,
-              marginBottom: 10,
-            }}
-            placeholder="New Password"
-            value={newPassword}
-            onChangeText={setNewPassword}
-            secureTextEntry
-          />
-          <TextInput
-            style={{
-              borderWidth: 1,
-              borderColor: '#333',
-              borderRadius: 8,
-              padding: 10,
-              width: 250,
-              fontSize: 18,
-              marginBottom: 20,
-            }}
-            placeholder="Confirm New Password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-          />
-          <TouchableOpacity
-            style={{
-              backgroundColor: '#333',
-              paddingVertical: 12,
-              paddingHorizontal: 32,
-              borderRadius: 8,
-            }}
-            onPress={handleUpdatePassword}
-          >
-            <Text style={{ color: 'white', fontSize: 18 }}>Update Password</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Change Password</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Current Password"
+                placeholderTextColor={colors.textSecondary}
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+                textContentType="password"
+                importantForAutofill="no"
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="New Password"
+                placeholderTextColor={colors.textSecondary}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+                textContentType="newPassword"
+                importantForAutofill="no"
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm New Password"
+                placeholderTextColor={colors.textSecondary}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="off"
+                textContentType="newPassword"
+                importantForAutofill="no"
+              />
+            </View>
+            <TouchableOpacity style={styles.button} onPress={handleUpdatePassword}>
+              <Text style={styles.buttonText}>Update Password</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );
 };
+
+const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  section: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionTitle: {
+    ...textStyles.subtitle,
+    color: colors.primary,
+    marginBottom: spacing.md,
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.primary + '20',
+    height: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  input: {
+    flex: 1,
+    height: 50,
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '500',
+    backgroundColor: 'transparent',
+  },
+  button: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    padding: spacing.md,
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  buttonText: {
+    color: colors.card,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
 
 export default SettingsScreen; 
