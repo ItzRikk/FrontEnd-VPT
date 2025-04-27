@@ -186,6 +186,7 @@ const SettingsScreen = ({ navigation }) => {
                 .delete()
                 .eq('user_id', user.id);
               if (error) throw error;
+              clearAllFields();
               await supabase.auth.signOut();
               navigation.navigate('Landing');
             } catch (error) {

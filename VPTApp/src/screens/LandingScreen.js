@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/Ionicons';
 import DisclaimerModal from '../components/DisclaimerModal';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -83,6 +84,18 @@ const LandingScreen = ({ navigation }) => {
     setCanAcceptTerms(false);
   }, []);
 
+  // Clear all input fields every time the screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      setEmail('');
+      setPassword('');
+      setName('');
+      setUsername('');
+      setHasAcceptedTerms(false);
+      setCanAcceptTerms(false);
+    }, [])
+  );
+
   // Reset all input fields when switching between login/signup
   useEffect(() => {
     setEmail('');
@@ -138,8 +151,21 @@ const LandingScreen = ({ navigation }) => {
         }
         
         if (authData.data?.user) {
-          console.log('User logged in:', authData.data.user.id);
-          navigation.navigate('Profile');
+          const userId = authData.data.user.id;
+          // Check if questionnaire is completed
+          const { data: questionnaireData, error: questionnaireError } = await supabase
+            .from('questionnaire_answers')
+            .select('id')
+            .eq('user_id', userId)
+            .single();
+
+          if (!questionnaireData) {
+            // No questionnaire found, redirect to onboarding
+            navigation.navigate('Questionnaire');
+          } else {
+            // Questionnaire completed, go to profile
+            navigation.navigate('Profile');
+          }
         }
       } else {
         if (!name.trim()) {
@@ -186,14 +212,19 @@ const LandingScreen = ({ navigation }) => {
         }
         
         if (data?.user) {
+          // Capture values before clearing state
+          const upsertUserId = data.user.id;
+          const upsertEmail = email.trim();
+          const upsertName = name.trim();
+          const upsertUsername = username.trim();
           // Insert into userProfile
           const { error: profileError } = await supabase
             .from('userProfile')
-            .insert({
-              user_id: data.user.id,
-              email: email.trim(),
-              name: name.trim(),
-              username: username.trim(),
+            .upsert({
+              user_id: upsertUserId,
+              email: upsertEmail,
+              name: upsertName,
+              username: upsertUsername,
               terms_accepted_at: true,
               is_admin: false
             });
