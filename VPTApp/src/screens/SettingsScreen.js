@@ -3,6 +3,7 @@ import { View, TextInput, SafeAreaView, Text, TouchableOpacity, Alert, Touchable
 import { supabase } from '../api/supabaseClient';
 import Header from '../components/Header';
 import { colors, spacing, textStyles } from '../styles/sharedStyles';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const SettingsScreen = () => {
   const [name, setName] = useState('');
@@ -81,6 +82,40 @@ const SettingsScreen = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { data: { user }, error: userError } = await supabase.auth.getUser();
+              if (userError || !user) {
+                Alert.alert('Error', 'Could not get user');
+                return;
+              }
+              const { error } = await supabase
+                .from('userProfile')
+                .delete()
+                .eq('user_id', user.id);
+              if (error) throw error;
+              await supabase.auth.signOut();
+              Alert.alert('Account Deleted', 'Your account has been deleted.');
+            } catch (error) {
+              console.error('Error deleting account:', error);
+              Alert.alert('Error', 'Failed to delete account. Please try again.');
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <SafeAreaView style={styles.background}>
@@ -89,6 +124,7 @@ const SettingsScreen = () => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Account Information</Text>
             <View style={styles.inputContainer}>
+              <Icon name="person-outline" size={20} color={colors.primary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Full Name"
@@ -103,6 +139,7 @@ const SettingsScreen = () => {
               />
             </View>
             <View style={styles.inputContainer}>
+              <Icon name="person-outline" size={20} color={colors.primary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Username"
@@ -117,6 +154,7 @@ const SettingsScreen = () => {
               />
             </View>
             <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
+              <Icon name="person-outline" size={20} color={colors.card} style={styles.buttonIcon} />
               <Text style={styles.buttonText}>Update</Text>
             </TouchableOpacity>
           </View>
@@ -124,6 +162,7 @@ const SettingsScreen = () => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Change Password</Text>
             <View style={styles.inputContainer}>
+              <Icon name="lock-closed-outline" size={20} color={colors.primary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Current Password"
@@ -139,6 +178,7 @@ const SettingsScreen = () => {
               />
             </View>
             <View style={styles.inputContainer}>
+              <Icon name="lock-closed-outline" size={20} color={colors.primary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="New Password"
@@ -154,6 +194,7 @@ const SettingsScreen = () => {
               />
             </View>
             <View style={styles.inputContainer}>
+              <Icon name="lock-closed-outline" size={20} color={colors.primary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Confirm New Password"
@@ -169,7 +210,14 @@ const SettingsScreen = () => {
               />
             </View>
             <TouchableOpacity style={styles.button} onPress={handleUpdatePassword}>
+              <Icon name="lock-closed-outline" size={20} color={colors.card} style={styles.buttonIcon} />
               <Text style={styles.buttonText}>Update Password</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={[styles.section, styles.deleteSection]}>
+            <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleDeleteAccount}>
+              <Icon name="trash-outline" size={20} color={colors.card} style={styles.buttonIcon} />
+              <Text style={styles.deleteButtonText}>Delete Account</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -239,12 +287,37 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: spacing.md,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginTop: spacing.sm,
+  },
+  buttonIcon: {
+    marginRight: spacing.sm,
   },
   buttonText: {
     color: colors.card,
     fontSize: 16,
     fontWeight: '600',
+  },
+  deleteSection: {
+    padding: spacing.sm,
+    marginBottom: spacing.lg,
+    alignItems: 'center',
+  },
+  deleteButton: {
+    backgroundColor: colors.error,
+    marginTop: 0,
+    marginBottom: 0,
+    width: '100%',
+  },
+  deleteButtonText: {
+    color: colors.card,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  inputIcon: {
+    marginRight: spacing.sm,
+    color: colors.primary,
   },
 });
 
