@@ -26,7 +26,7 @@ const Header = ({ title = 'VPT', showBack = true, showSettings = false }) => {
         )}
         <View style={styles.titleContainer}>
           <Image 
-            source={require('../../assets/vpt-logo.png')}
+            source={require('../../assets/VPT-logo.png')}
             style={styles.headerLogo}
             resizeMode="cover"
           />
