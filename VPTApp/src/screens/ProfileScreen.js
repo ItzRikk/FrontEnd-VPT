@@ -53,7 +53,7 @@ const ActionCard = ({ icon, label, onPress, color = themeColors.goldAccent }) =>
         style={styles.actionCard}
       >
         <View style={[styles.iconContainer, { backgroundColor: color }]}>
-          <Icon name={icon} size={26} color={themeColors.darkNavy} />
+          <Icon name={icon} size={24} color={themeColors.darkNavy} style={styles.icon} />
         </View>
         <Text style={styles.actionLabel} numberOfLines={2}>
           {label}
@@ -346,7 +346,10 @@ const ProfileScreen = ({ route, navigation }) => {
       
       <ScrollView 
         style={styles.scrollView} 
-        contentContainerStyle={[{ paddingBottom: insets.bottom + 20 }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 20 }
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.innerContainer, padding]}>
@@ -430,6 +433,9 @@ const ProfileScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 60,
   },
   innerContainer: {
     paddingHorizontal: 16,
@@ -638,12 +644,15 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(164, 212, 228, 0.15)',
   },
   iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
+  },
+  icon: {
+    marginLeft: 1,
   },
   actionLabel: {
     fontSize: 14,

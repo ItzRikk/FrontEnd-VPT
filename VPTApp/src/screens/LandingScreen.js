@@ -373,7 +373,7 @@ const LandingScreen = ({ navigation }) => {
                       onPress={() => canAcceptTerms && setHasAcceptedTerms(!hasAcceptedTerms)}
                       disabled={!canAcceptTerms}
                     >
-                      {hasAcceptedTerms && <Icon name="checkmark" size={16} color="white" />}
+                      {hasAcceptedTerms && <Icon name="checkmark" size={16} color={themeColors.darkNavy} />}
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setShowDisclaimer(true)}>
                       <Text style={[styles.termsText, { textDecorationLine: 'none' }]}>Terms & Conditions</Text>
@@ -472,15 +472,12 @@ const LandingScreen = ({ navigation }) => {
             )}
           </View>
         </ScrollView>
-        <DisclaimerModal
-          visible={showDisclaimer}
-          onAccept={() => {
-            setShowDisclaimer(false);
-            setCanAcceptTerms(true);
-          }}
-          onClose={() => setShowDisclaimer(false)}
-        />
       </View>
+      <DisclaimerModal
+        visible={showDisclaimer}
+        onAccept={handleDisclaimerAccept}
+        onClose={() => setShowDisclaimer(false)}
+      />
     </SafeAreaView>
   );
 };

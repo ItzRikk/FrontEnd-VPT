@@ -233,7 +233,8 @@ const SettingsScreen = () => {
         <Header title="Settings" showBack={true} />
         
         <ScrollView 
-          contentContainerStyle={[styles.scrollContent, padding]} 
+          style={styles.scrollView}
+          contentContainerStyle={[styles.scrollContent, padding, { paddingBottom: insets.bottom + 20 }]} 
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -389,10 +390,13 @@ const SettingsScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
-    flexGrow: 1,
     padding: 20,
-    paddingBottom: 40,
+    paddingTop: 80,
+    flexGrow: 1,
   },
   sectionContainer: {
     width: '100%',

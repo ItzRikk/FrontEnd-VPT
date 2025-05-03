@@ -16,6 +16,7 @@ import { supabase } from '../api/supabaseClient';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Header from '../components/Header';
 
 const { width } = Dimensions.get('window');
 
@@ -257,19 +258,7 @@ const ExperienceQuestionnaireScreen = () => {
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <Image 
-            source={require('../../assets/VPT-logo-csumb-1.png')}
-            style={styles.logo}
-            resizeMode="cover"
-          />
-        </View>
-        <Text style={styles.title}>Experience Assessment</Text>
-        <Text style={styles.subtitle}>
-          Let's assess your fitness experience level
-        </Text>
-      </View>
+      <Header title="Experience Assessment" showBack={true} />
       
       <ScrollView 
         style={styles.scrollView} 
@@ -402,6 +391,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
+    paddingTop: 60,
     paddingBottom: 40,
   },
   questionCardWrapper: {
@@ -592,6 +582,12 @@ const styles = StyleSheet.create({
     color: themeColors.goldAccent,
     opacity: 0.8,
     textAlign: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    padding: 10,
   },
 });
 

@@ -136,19 +136,6 @@ const DisclaimerModal = ({ visible, onAccept, onClose }) => {
     paddingRight: insets.right,
   };
 
-  const modalDimensions = {
-    width: Platform.OS === 'ios' 
-      ? width * 0.9 
-      : width > 600 
-        ? width * 0.8 
-        : width * 0.95,
-    maxHeight: Platform.OS === 'ios' 
-      ? height * 0.85 
-      : height > 700 
-        ? height * 0.85 
-        : height * 0.9,
-  };
-
   return (
     <Modal
       visible={visible}
@@ -160,12 +147,12 @@ const DisclaimerModal = ({ visible, onAccept, onClose }) => {
       <StatusBar barStyle="light-content" backgroundColor="rgba(0, 0, 0, 0.5)" />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, modalDimensions]}>
+          <View style={styles.modalContent}>
             <LinearGradient
               colors={[themeColors.darkNavyLight, themeColors.darkNavy]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={styles.modalGradient}
+              style={[styles.modalGradient, { flex: 1, padding: 20, borderRadius: 16 }]}
             >
               <View style={styles.header}>
                 <Text style={[
@@ -324,13 +311,22 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingVertical: 40,
   },
   modalContent: {
-    borderRadius: 20,
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: themeColors.lightBlue,
+    padding: 20,
+    backgroundColor: themeColors.darkNavy,
     overflow: 'hidden',
+    alignItems: 'stretch',
+    minHeight: 776,
   },
   modalGradient: {
     flex: 1,

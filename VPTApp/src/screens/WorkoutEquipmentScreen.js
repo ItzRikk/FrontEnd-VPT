@@ -220,10 +220,10 @@ const EquipmentOption = ({ option, isSelected, onSelect, isSmallScreen }) => {
 
 const WorkoutEquipmentScreen = () => {
   const navigation = useNavigation();
+  const { width } = useWindowDimensions();
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [savedPreference, setSavedPreference] = useState(null);
-  const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isSmallScreen = width < 350;
 
@@ -439,6 +439,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
+    paddingTop: 80, // Increased padding to account for header height
     paddingBottom: 100, // Extra padding for the floating button
   },
   header: {

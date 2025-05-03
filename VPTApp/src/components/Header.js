@@ -28,13 +28,13 @@ const Header = ({ title = 'VPT', showBack = true, showSettings = false }) => {
     : StatusBar.currentHeight;
 
   return (
-    <View style={[styles.header, { paddingTop }]}>
+    <View style={[styles.header, { paddingTop: 0 }]}>
       <StatusBar 
         barStyle="light-content" 
         backgroundColor={themeColors.darkNavy} 
       />
       
-      <View style={styles.headerContent}>
+      <View style={[styles.headerContent, { marginTop: paddingTop }]}>
         {showBack && (
           <TouchableOpacity 
             style={styles.backButton}
@@ -73,12 +73,18 @@ const styles = StyleSheet.create({
     backgroundColor: themeColors.darkNavy,
     borderBottomWidth: 1,
     borderBottomColor: `${themeColors.goldAccent}40`,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 64,
+    height: 48,
     paddingHorizontal: 16,
+    marginTop: Platform.OS === 'ios' ? 44 : 0,
   },
   backButton: {
     position: 'absolute',
@@ -97,10 +103,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerLogo: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 8,
   },
   headerTitle: {
     fontSize: 20,
