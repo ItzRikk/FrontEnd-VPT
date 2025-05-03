@@ -8,6 +8,7 @@ import ProgressScreen from '../screens/ProgressScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
+import GeneratedWorkoutScreen from '../screens/GeneratedWorkoutScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -67,6 +68,13 @@ const AppNavigator = () => {
         component={SettingsScreen}
         options={{
           title: 'Settings'
+        }}
+      />
+      <Stack.Screen
+        name="GeneratedWorkout"
+        component={GeneratedWorkoutScreen}
+        options={{
+          title: 'Your Workout'
         }}
       />
       <Stack.Screen 

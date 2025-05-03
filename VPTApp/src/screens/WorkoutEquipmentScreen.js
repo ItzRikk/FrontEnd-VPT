@@ -37,63 +37,7 @@ const themeColors = {
   transparent: 'transparent',
 };
 
-// Equipment options with enhanced data
-const equipmentOptions = [
-  {
-    id: 'minimal',
-    title: 'Minimal Equipment',
-    description: 'Basic items like resistance bands, yoga mat, or small dumbbells',
-    icon: 'fitness-outline',
-    color: themeColors.lightBlue,
-    gradient: [themeColors.lightBlueLight, themeColors.lightBlue],
-    examples: ['Resistance bands', 'Yoga mat', 'Bodyweight exercises']
-  },
-  {
-    id: 'dumbbells',
-    title: 'Dumbbells',
-    description: 'A set of dumbbells with various weights',
-    icon: 'barbell-outline',
-    color: themeColors.goldAccent,
-    gradient: [themeColors.goldLight, themeColors.goldAccent],
-    examples: ['Adjustable dumbbells', 'Fixed weight dumbbells', 'Kettlebells']
-  },
-  {
-    id: 'bench',
-    title: 'Bench & Basic Equipment',
-    description: 'Weight bench with dumbbells and/or barbell',
-    icon: 'barbell-outline',
-    color: themeColors.lightBlue,
-    gradient: [themeColors.lightBlueLight, themeColors.lightBlue],
-    examples: ['Weight bench', 'Dumbbells', 'Basic barbell set']
-  },
-  {
-    id: 'rack',
-    title: 'Squat Rack',
-    description: 'Squat rack or power rack with barbell and plates',
-    icon: 'barbell-outline',
-    color: themeColors.goldAccent,
-    gradient: [themeColors.goldLight, themeColors.goldAccent],
-    examples: ['Squat rack', 'Power rack', 'Olympic barbell & plates']
-  },
-  {
-    id: 'cardio',
-    title: 'Cardio Equipment',
-    description: 'Treadmill, stationary bike, or other cardio machines',
-    icon: 'bicycle-outline',
-    color: themeColors.lightBlue,
-    gradient: [themeColors.lightBlueLight, themeColors.lightBlue],
-    examples: ['Treadmill', 'Stationary bike', 'Elliptical']
-  },
-  {
-    id: 'full',
-    title: 'Full Gym',
-    description: 'Access to a complete gym with various equipment',
-    icon: 'fitness-outline',
-    color: themeColors.goldAccent,
-    gradient: [themeColors.goldLight, themeColors.goldAccent],
-    examples: ['Commercial gym', 'Home gym setup', 'All equipment types']
-  },
-];
+// Equipment options will be fetched from the database
 
 // Option card component for cleaner rendering
 const EquipmentOption = ({ option, isSelected, onSelect, isSmallScreen }) => {
@@ -218,18 +162,108 @@ const EquipmentOption = ({ option, isSelected, onSelect, isSmallScreen }) => {
   );
 };
 
+// Helper to capitalize first letter of each word
+function capitalizeWords(str) {
+  return str.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// Environment option card
+const EnvironmentOption = ({ option, isSelected, onSelect, isSmallScreen }) => {
+  return (
+    <TouchableOpacity
+      style={[
+        styles.environmentOption,
+        isSelected && { borderColor: option.color, borderWidth: 2, backgroundColor: `${option.color}22` }
+      ]}
+      onPress={() => onSelect(option.id)}
+      activeOpacity={0.85}
+    >
+      <Icon name={option.icon || 'home-outline'} size={isSmallScreen ? 20 : 24} color={option.color} style={{ marginRight: 12 }} />
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.environmentTitle, isSmallScreen && { fontSize: 15 }]}>{capitalizeWords(option.name)}</Text>
+        {option.description ? (
+          <Text style={[styles.environmentDescription, isSmallScreen && { fontSize: 13 }]}>{option.description}</Text>
+        ) : null}
+      </View>
+      {isSelected && <Icon name="checkmark-circle" size={22} color={option.color} />}
+    </TouchableOpacity>
+  );
+};
+
+// Helper to map equipment title to Ionicons icon
+function getEquipmentIcon(title) {
+  if (!title) return 'help-circle-outline';
+  const t = title.toLowerCase();
+  if (t.includes('dumbbell')) return 'barbell-outline';
+  if (t.includes('band')) return 'fitness-outline';
+  if (t.includes('bodyweight')) return 'walk-outline';
+  if (t.includes('bench')) return 'barbell-outline';
+  if (t.includes('kettlebell')) return 'barbell-outline';
+  if (t.includes('barbell')) return 'barbell-outline';
+  if (t.includes('cardio')) return 'bicycle-outline';
+  if (t.includes('gym')) return 'fitness-outline';
+  if (t.includes('rack')) return 'barbell-outline';
+  if (t.includes('mat')) return 'walk-outline';
+  // Add more mappings as needed
+  return 'help-circle-outline';
+}
+
 const WorkoutEquipmentScreen = () => {
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [savedPreference, setSavedPreference] = useState(null);
+  const [equipmentOptions, setEquipmentOptions] = useState([]); // <-- fetched options
+  const [equipmentLoading, setEquipmentLoading] = useState(true);
+  const [environmentOptions, setEnvironmentOptions] = useState([]);
+  const [environmentLoading, setEnvironmentLoading] = useState(true);
+  const [selectedEnvironment, setSelectedEnvironment] = useState(null);
   const insets = useSafeAreaInsets();
   const isSmallScreen = width < 350;
 
   // Button animation
   const buttonOpacity = useState(new Animated.Value(0))[0];
   const buttonTranslateY = useState(new Animated.Value(20))[0];
+
+  // Fetch equipment options from the database
+  useEffect(() => {
+    const fetchEquipment = async () => {
+      setEquipmentLoading(true);
+      try {
+        // Fetch first two rows from equipment table
+        const { data, error } = await supabase
+          .from('equipment')
+          .select('*')
+          .limit(2);
+        if (error) throw error;
+        if (data) {
+          // Map DB fields to UI fields
+          const mapped = data.map((item, idx) => {
+            const title = item.title || item.name || `Equipment ${idx + 1}`;
+            return {
+              id: item.id?.toString() || `equipment${idx}`,
+              title,
+              description: item.description || '',
+              icon: getEquipmentIcon(title),
+              color: idx === 0 ? themeColors.lightBlue : themeColors.goldAccent,
+              gradient: idx === 0
+                ? [themeColors.lightBlueLight, themeColors.lightBlue]
+                : [themeColors.goldLight, themeColors.goldAccent],
+              examples: item.examples ? item.examples.split(',') : [],
+            };
+          });
+          setEquipmentOptions(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching equipment:', err);
+        setEquipmentOptions([]);
+      } finally {
+        setEquipmentLoading(false);
+      }
+    };
+    fetchEquipment();
+  }, []);
 
   useEffect(() => {
     // Check if user already has a preference
@@ -248,6 +282,36 @@ const WorkoutEquipmentScreen = () => {
     };
 
     fetchUserPreference();
+  }, []);
+
+  // Fetch environment options from the database
+  useEffect(() => {
+    const fetchEnvironments = async () => {
+      setEnvironmentLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('userEnvironmentEquipment')
+          .select('*');
+        if (error) throw error;
+        if (data) {
+          // Map DB fields to UI fields
+          const mapped = data.map((item, idx) => ({
+            id: item.id?.toString() || `env${idx}`,
+            name: item.environment || item.name || item.title || `Environment ${idx + 1}`,
+            description: item.description || '',
+            icon: item.icon || (item.environment?.toLowerCase().includes('home') ? 'home-outline' : 'business-outline'),
+            color: idx === 0 ? themeColors.lightBlue : themeColors.goldAccent,
+          }));
+          setEnvironmentOptions(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching environments:', err);
+        setEnvironmentOptions([]);
+      } finally {
+        setEnvironmentLoading(false);
+      }
+    };
+    fetchEnvironments();
   }, []);
 
   // Animate button when selection changes
@@ -285,8 +349,12 @@ const WorkoutEquipmentScreen = () => {
     setSelectedEquipment(equipmentId);
   };
 
+  const handleSelectEnvironment = (envId) => {
+    setSelectedEnvironment(envId);
+  };
+
   const handleSubmit = async () => {
-    if (!selectedEquipment || loading) return;
+    if (!selectedEquipment || !selectedEnvironment || loading) return;
 
     try {
       setLoading(true);
@@ -299,16 +367,74 @@ const WorkoutEquipmentScreen = () => {
         return;
       }
 
-      // Update user metadata with equipment preference
+      // Update user metadata with equipment and environment preference
       const { error } = await supabase.auth.update({
         data: {
           equipment_preference: selectedEquipment,
+          environment_preference: selectedEnvironment,
         }
       });
 
       if (error) throw error;
 
-      // Navigate back to profile
+      // If Gym and Dumbbells, fetch exercises for Novice level
+      const selectedEnvObj = environmentOptions.find(opt => opt.id === selectedEnvironment);
+      const selectedEquipObj = equipmentOptions.find(opt => opt.id === selectedEquipment);
+      const envName = selectedEnvObj?.name?.toLowerCase() || '';
+      const equipName = selectedEquipObj?.title?.toLowerCase() || '';
+      
+      if (envName.includes('gym') && equipName.includes('dumbbell')) {
+        // Fetch exercises for Novice level and Dumbbells
+        const { data: exercises, error: exError } = await supabase
+          .from('exercise')
+          .select('id, name, instruction, duration, sets, reps, level, rest, target_rpe_max, target_rpe_min, label')
+          .eq('level', 'Novice')
+          .or(`name.ilike.%dumbbell%,instruction.ilike.%dumbbell%`)
+          .order('id', { ascending: true });
+          
+        if (exError) {
+          console.error('Exercise fetch error:', exError);
+          Alert.alert('Error', 'Failed to fetch exercises.');
+          return;
+        }
+        
+        if (!exercises || exercises.length === 0) {
+          Alert.alert('No Exercises', 'No exercises found for your current setup.');
+          navigation.navigate('Profile');
+          return;
+        }
+        
+        navigation.navigate('GeneratedWorkout', { exercises });
+        return;
+      }
+
+      // Handle Home environment with Light Bands
+      if (envName.includes('home') && equipName.includes('band')) {
+        // Fetch exercises for Novice level and Bodyweight
+        const { data: exercises, error: exError } = await supabase
+          .from('exercise')
+          .select('id, name, instruction, duration, sets, reps, level, rest, target_rpe_max, target_rpe_min, label')
+          .eq('level', 'Novice')
+          .or(`name.ilike.%squat%,instruction.ilike.%squat%`)
+          .order('id', { ascending: true });
+          
+        if (exError) {
+          console.error('Exercise fetch error:', exError);
+          Alert.alert('Error', 'Failed to fetch exercises.');
+          return;
+        }
+        
+        if (!exercises || exercises.length === 0) {
+          Alert.alert('No Exercises', 'No exercises found for your current setup.');
+          navigation.navigate('Profile');
+          return;
+        }
+        
+        navigation.navigate('GeneratedWorkout', { exercises });
+        return;
+      }
+
+      // Default: Navigate back to profile
       navigation.navigate('Profile');
     } catch (error) {
       console.error('Error saving equipment preference:', error);
@@ -346,6 +472,27 @@ const WorkoutEquipmentScreen = () => {
         contentContainerStyle={[styles.scrollContent, padding]}
         showsVerticalScrollIndicator={false}
       >
+        <Text style={[styles.subtitle, isSmallScreen && { fontSize: 17, marginBottom: 8 }]}>Where are you working out?</Text>
+        {environmentLoading ? (
+          <ActivityIndicator color={themeColors.goldAccent} size="large" style={{ marginTop: 20 }} />
+        ) : environmentOptions.length === 0 ? (
+          <Text style={{ color: themeColors.white, textAlign: 'center', marginTop: 20 }}>
+            No environment options found.
+          </Text>
+        ) : (
+          <View style={styles.environmentRow}>
+            {environmentOptions.map((option, idx) => (
+              <EnvironmentOption
+                key={option.id}
+                option={option}
+                isSelected={selectedEnvironment === option.id}
+                onSelect={handleSelectEnvironment}
+                isSmallScreen={isSmallScreen}
+              />
+            ))}
+          </View>
+        )}
+
         <View style={styles.header}>
           <LinearGradient
             colors={selectedOption 
@@ -356,33 +503,41 @@ const WorkoutEquipmentScreen = () => {
             end={{ x: 1, y: 1 }}
           >
             <Icon 
-              name={selectedOption ? selectedOption.icon : "barbell-outline"} 
+              name={selectedOption?.icon || "barbell-outline"} 
               size={34} 
               color={themeColors.darkNavy} 
               style={styles.headerIcon} 
             />
           </LinearGradient>
           <Text style={[styles.subtitle, isSmallScreen && { fontSize: 17 }]}>
-            {selectedEquipment 
+            {selectedEquipment && selectedOption?.title
               ? `${selectedOption.title} Selected` 
               : "What equipment do you have access to?"}
           </Text>
           <Text style={[styles.subtitleHint, isSmallScreen && { fontSize: 13 }]}>
-            {selectedEquipment 
+            {selectedEquipment
               ? "Your workouts will be customized based on your selection" 
               : "Choose the option that best matches your setup"}
           </Text>
         </View>
 
-        {equipmentOptions.map((option, index) => (
-          <EquipmentOption
-            key={option.id}
-            option={option}
-            isSelected={selectedEquipment === option.id}
-            onSelect={handleSelect}
-            isSmallScreen={isSmallScreen}
-          />
-        ))}
+        {equipmentLoading ? (
+          <ActivityIndicator color={themeColors.goldAccent} size="large" style={{ marginTop: 40 }} />
+        ) : equipmentOptions.length === 0 ? (
+          <Text style={{ color: themeColors.white, textAlign: 'center', marginTop: 40 }}>
+            No equipment options found.
+          </Text>
+        ) : (
+          equipmentOptions.map((option, index) => (
+            <EquipmentOption
+              key={option.id}
+              option={option}
+              isSelected={selectedEquipment === option.id}
+              onSelect={handleSelect}
+              isSmallScreen={isSmallScreen}
+            />
+          ))
+        )}
 
         <Animated.View 
           style={[
@@ -397,7 +552,7 @@ const WorkoutEquipmentScreen = () => {
           <TouchableOpacity
             style={styles.submitButton}
             onPress={handleSubmit}
-            disabled={!selectedEquipment || loading}
+            disabled={!selectedEquipment || !selectedEnvironment || loading}
             activeOpacity={0.8}
           >
             <LinearGradient
@@ -605,6 +760,34 @@ const styles = StyleSheet.create({
     color: themeColors.darkNavy,
     fontSize: 16,
     fontWeight: '700',
+  },
+  environmentRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  environmentOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(164, 212, 228, 0.15)',
+    padding: 14,
+    marginBottom: 12,
+    flex: 1,
+    marginRight: 8,
+  },
+  environmentTitle: {
+    color: themeColors.white,
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  environmentDescription: {
+    color: themeColors.white,
+    opacity: 0.7,
+    fontSize: 14,
   },
 });
 
