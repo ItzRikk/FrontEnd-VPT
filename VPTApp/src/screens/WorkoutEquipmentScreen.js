@@ -222,6 +222,13 @@ const WorkoutEquipmentScreen = () => {
   const insets = useSafeAreaInsets();
   const isSmallScreen = width < 350;
 
+  // Reset state when screen mounts
+  useEffect(() => {
+    setSelectedEquipment(null);
+    setSelectedEnvironment(null);
+    setSavedPreference(null);
+  }, []);
+
   // Button animation
   const buttonOpacity = useState(new Animated.Value(0))[0];
   const buttonTranslateY = useState(new Animated.Value(20))[0];
@@ -263,25 +270,6 @@ const WorkoutEquipmentScreen = () => {
       }
     };
     fetchEquipment();
-  }, []);
-
-  useEffect(() => {
-    // Check if user already has a preference
-    const fetchUserPreference = async () => {
-      try {
-        const session = supabase.auth.session();
-        const user = session ? session.user : null;
-        if (user && user.user_metadata && user.user_metadata.equipment_preference) {
-          const pref = user.user_metadata.equipment_preference;
-          setSavedPreference(pref);
-          setSelectedEquipment(pref);
-        }
-      } catch (error) {
-        console.error('Error fetching user preference:', error);
-      }
-    };
-
-    fetchUserPreference();
   }, []);
 
   // Fetch environment options from the database
@@ -539,6 +527,9 @@ const WorkoutEquipmentScreen = () => {
           ))
         )}
 
+        {/* Add padding between equipment and button */}
+        <View style={{ height: 40 }} />
+
         <Animated.View 
           style={[
             styles.buttonContainer, 
@@ -725,16 +716,17 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   buttonContainer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
+    position: 'relative',
+    bottom: 0,
+    left: 0,
+    right: 0,
     alignItems: 'center',
+    marginTop: 20,
   },
   submitButton: {
     width: '100%',
     height: 56,
-    borderRadius: 28,
+    borderRadius: 12, // More square, less pill
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: {
@@ -744,6 +736,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   submitButtonGradient: {
     flexDirection: 'row',
