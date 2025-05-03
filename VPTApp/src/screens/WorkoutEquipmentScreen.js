@@ -219,6 +219,7 @@ const WorkoutEquipmentScreen = () => {
   const [environmentOptions, setEnvironmentOptions] = useState([]);
   const [environmentLoading, setEnvironmentLoading] = useState(true);
   const [selectedEnvironment, setSelectedEnvironment] = useState(null);
+  const [userExperienceLevel, setUserExperienceLevel] = useState('Novice'); // Default to Novice
   const insets = useSafeAreaInsets();
   const isSmallScreen = width < 350;
 
@@ -302,6 +303,44 @@ const WorkoutEquipmentScreen = () => {
     fetchEnvironments();
   }, []);
 
+  // Fetch user's experience level on mount
+  useEffect(() => {
+    const fetchExperienceLevel = async () => {
+      try {
+        const session = supabase.auth.session();
+        const user = session ? session.user : null;
+        if (!user) return;
+        // Try questionnaire_answers first
+        const { data: questionnaireData } = await supabase
+          .from('questionnaire_answers')
+          .select('experience_level')
+          .eq('user_id', user.id)
+          .single();
+        if (questionnaireData && questionnaireData.experience_level) {
+          setUserExperienceLevel(questionnaireData.experience_level);
+          return;
+        }
+        // Fallback to userProfile
+        const { data: profileData } = await supabase
+          .from('userProfile')
+          .select('level')
+          .eq('user_id', user.id)
+          .single();
+        if (profileData && profileData.level) {
+          setUserExperienceLevel(profileData.level);
+          return;
+        }
+        // Fallback to user_metadata
+        if (user.user_metadata && user.user_metadata.experience_level) {
+          setUserExperienceLevel(user.user_metadata.experience_level);
+        }
+      } catch (err) {
+        console.error('Error fetching user experience level:', err);
+      }
+    };
+    fetchExperienceLevel();
+  }, []);
+
   // Animate button when selection changes
   useEffect(() => {
     if (selectedEquipment) {
@@ -344,6 +383,15 @@ const WorkoutEquipmentScreen = () => {
   const handleSubmit = async () => {
     if (!selectedEquipment || !selectedEnvironment || loading) return;
 
+    // If not Novice, show alert and return
+    if (userExperienceLevel && userExperienceLevel.toLowerCase() !== 'novice') {
+      Alert.alert(
+        'Coming Soon',
+        'Workouts for your experience level are coming soon! For now, only Novice workouts are available.'
+      );
+      return;
+    }
+
     try {
       setLoading(true);
       const session2 = supabase.auth.session();
@@ -365,18 +413,18 @@ const WorkoutEquipmentScreen = () => {
 
       if (error) throw error;
 
-      // If Gym and Dumbbells, fetch exercises for Novice level
+      // If Gym and Dumbbells, fetch exercises for user's experience level and Dumbbells
       const selectedEnvObj = environmentOptions.find(opt => opt.id === selectedEnvironment);
       const selectedEquipObj = equipmentOptions.find(opt => opt.id === selectedEquipment);
       const envName = selectedEnvObj?.name?.toLowerCase() || '';
       const equipName = selectedEquipObj?.title?.toLowerCase() || '';
       
       if (envName.includes('gym') && equipName.includes('dumbbell')) {
-        // Fetch exercises for Novice level and Dumbbells
+        // Fetch exercises for user's experience level and Dumbbells
         const { data: exercises, error: exError } = await supabase
           .from('exercise')
           .select('id, name, instruction, duration, sets, reps, level, rest, target_rpe_max, target_rpe_min, label')
-          .eq('level', 'Novice')
+          .eq('level', userExperienceLevel)
           .or(`name.ilike.%dumbbell%,instruction.ilike.%dumbbell%`)
           .order('id', { ascending: true });
           
@@ -398,11 +446,11 @@ const WorkoutEquipmentScreen = () => {
 
       // Handle Home environment with Light Bands
       if (envName.includes('home') && equipName.includes('band')) {
-        // Fetch exercises for Novice level and Bodyweight
+        // Fetch exercises for user's experience level and Bodyweight
         const { data: exercises, error: exError } = await supabase
           .from('exercise')
           .select('id, name, instruction, duration, sets, reps, level, rest, target_rpe_max, target_rpe_min, label')
-          .eq('level', 'Novice')
+          .eq('level', userExperienceLevel)
           .or(`name.ilike.%squat%,instruction.ilike.%squat%`)
           .order('id', { ascending: true });
           
