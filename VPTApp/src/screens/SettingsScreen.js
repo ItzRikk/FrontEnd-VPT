@@ -1,9 +1,41 @@
-import React, { useState } from 'react';
-import { View, TextInput, SafeAreaView, Text, TouchableOpacity, Alert, TouchableWithoutFeedback, Keyboard, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { 
+  View, 
+  TextInput, 
+  SafeAreaView, 
+  Text, 
+  TouchableOpacity, 
+  Alert, 
+  TouchableWithoutFeedback, 
+  Keyboard, 
+  StyleSheet, 
+  ScrollView,
+  StatusBar,
+  Platform,
+  useWindowDimensions
+} from 'react-native';
 import { supabase } from '../api/supabaseClient';
 import Header from '../components/Header';
 import { colors, spacing, textStyles } from '../styles/sharedStyles';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const themeColors = {
+  darkNavy: '#0E1E32',
+  darkNavyLight: '#162C4A',
+  darkNavyMedium: '#112338',
+  goldAccent: '#D49B45',
+  goldLight: '#E8B76D',
+  goldDark: '#B37F2E',
+  lightBlue: '#A4D4E4',
+  lightBlueLight: '#C4E4F4',
+  lightBlueDark: '#7BA8B8',
+  white: '#FFFFFF',
+  offWhite: 'rgba(255, 255, 255, 0.9)',
+  transparent: 'transparent',
+  error: '#E53935',
+};
 
 const SettingsScreen = () => {
   const [name, setName] = useState('');
@@ -11,11 +43,41 @@ const SettingsScreen = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isSmallScreen = width < 350;
 
-  console.log('SettingsScreen rendered');
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('userProfile')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (data) {
+          setUserData(data);
+          setName(data.name || '');
+          setUsername(data.username || '');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
 
   const handleUpdateProfile = async () => {
+    if (loading) return;
     try {
+      setLoading(true);
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
         Alert.alert('Error', 'Could not get user');
@@ -34,15 +96,17 @@ const SettingsScreen = () => {
         .eq('user_id', user.id);
       if (error) throw error;
       Alert.alert('Success', 'Profile updated successfully');
-      setName('');
-      setUsername('');
+      fetchUserData();
     } catch (error) {
       console.error('Error updating profile:', error);
       Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleUpdatePassword = async () => {
+    if (loading) return;
     if (!currentPassword || !newPassword || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all password fields');
       return;
@@ -56,6 +120,7 @@ const SettingsScreen = () => {
       return;
     }
     try {
+      setLoading(true);
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) {
         Alert.alert('Error', 'Could not get user');
@@ -82,6 +147,8 @@ const SettingsScreen = () => {
     } catch (error) {
       console.error('Error updating password:', error);
       Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,6 +163,7 @@ const SettingsScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
+              setLoading(true);
               const { data: { user }, error: userError } = await supabase.auth.getUser();
               if (userError || !user) {
                 Alert.alert('Error', 'Could not get user');
@@ -111,6 +179,8 @@ const SettingsScreen = () => {
             } catch (error) {
               console.error('Error deleting account:', error);
               Alert.alert('Error', 'Failed to delete account. Please try again.');
+            } finally {
+              setLoading(false);
             }
           },
         },
@@ -119,109 +189,198 @@ const SettingsScreen = () => {
     );
   };
 
+  const padding = {
+    paddingLeft: Math.max(16, insets.left),
+    paddingRight: Math.max(16, insets.right),
+  };
+
+  const renderButton = (icon, label, onPress, color = themeColors.goldAccent, textColor = themeColors.darkNavy, isLoading = false) => (
+    <TouchableOpacity 
+      style={[styles.button, { backgroundColor: color }]} 
+      onPress={onPress}
+      disabled={isLoading}
+      activeOpacity={0.8}
+    >
+      {isLoading ? (
+        <Text style={[styles.buttonText, { color: textColor }]}>Loading...</Text>
+      ) : (
+        <>
+          <Icon name={icon} size={20} color={textColor} style={styles.buttonIcon} />
+          <Text style={[styles.buttonText, { color: textColor }]}>{label}</Text>
+        </>
+      )}
+    </TouchableOpacity>
+  );
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <SafeAreaView style={styles.background}>
+      <SafeAreaView 
+        style={{ 
+          flex: 1, 
+          backgroundColor: themeColors.darkNavy,
+          paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0
+        }}
+        edges={['left', 'right']}
+      >
+        <StatusBar barStyle="light-content" backgroundColor={themeColors.darkNavy} />
+        <LinearGradient
+          colors={[themeColors.darkNavyLight, themeColors.darkNavy]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        
         <Header title="Settings" showBack={true} />
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Account Information</Text>
-            <View style={styles.inputContainer}>
-              <Icon name="person-outline" size={20} color={colors.primary} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                placeholderTextColor={colors.textSecondary}
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-                autoCorrect={false}
-                autoComplete="off"
-                textContentType="name"
-                importantForAutofill="no"
-              />
-            </View>
-            <View style={styles.inputContainer}>
-              <Icon name="person-outline" size={20} color={colors.primary} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Username"
-                placeholderTextColor={colors.textSecondary}
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="off"
-                textContentType="username"
-                importantForAutofill="no"
-              />
-            </View>
-            <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
-              <Icon name="person-outline" size={20} color={colors.card} style={styles.buttonIcon} />
-              <Text style={styles.buttonText}>Update</Text>
-            </TouchableOpacity>
+        
+        <ScrollView 
+          contentContainerStyle={[styles.scrollContent, padding]} 
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.sectionContainer}>
+            <LinearGradient
+              colors={[themeColors.darkNavyLight, themeColors.darkNavy]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.section}
+            >
+              <View style={styles.sectionTitleContainer}>
+                <Icon name="person-circle" size={20} color={themeColors.goldAccent} style={{ marginRight: 8 }} />
+                <Text style={[styles.sectionTitle, isSmallScreen && { fontSize: 18 }]}>Account Information</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Icon name="person-outline" size={20} color={themeColors.lightBlue} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Full Name"
+                  placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  autoComplete="name"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Icon name="at-outline" size={20} color={themeColors.lightBlue} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Username"
+                  placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                  value={username}
+                  onChangeText={setUsername}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="username"
+                />
+              </View>
+              
+              {renderButton(
+                "save-outline", 
+                "Update Profile", 
+                handleUpdateProfile,
+                themeColors.goldAccent,
+                themeColors.darkNavy,
+                loading
+              )}
+            </LinearGradient>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Change Password</Text>
-            <View style={styles.inputContainer}>
-              <Icon name="lock-closed-outline" size={20} color={colors.primary} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Current Password"
-                placeholderTextColor={colors.textSecondary}
-                value={currentPassword}
-                onChangeText={setCurrentPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="off"
-                textContentType="password"
-                importantForAutofill="no"
-              />
-            </View>
-            <View style={styles.inputContainer}>
-              <Icon name="lock-closed-outline" size={20} color={colors.primary} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="New Password"
-                placeholderTextColor={colors.textSecondary}
-                value={newPassword}
-                onChangeText={setNewPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="off"
-                textContentType="newPassword"
-                importantForAutofill="no"
-              />
-            </View>
-            <View style={styles.inputContainer}>
-              <Icon name="lock-closed-outline" size={20} color={colors.primary} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm New Password"
-                placeholderTextColor={colors.textSecondary}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="off"
-                textContentType="newPassword"
-                importantForAutofill="no"
-              />
-            </View>
-            <TouchableOpacity style={styles.button} onPress={handleUpdatePassword}>
-              <Icon name="lock-closed-outline" size={20} color={colors.card} style={styles.buttonIcon} />
-              <Text style={styles.buttonText}>Update Password</Text>
-            </TouchableOpacity>
+          <View style={styles.sectionContainer}>
+            <LinearGradient
+              colors={[themeColors.darkNavyLight, themeColors.darkNavy]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.section}
+            >
+              <View style={styles.sectionTitleContainer}>
+                <Icon name="lock-closed" size={20} color={themeColors.lightBlue} style={{ marginRight: 8 }} />
+                <Text style={[styles.sectionTitle, isSmallScreen && { fontSize: 18 }]}>Change Password</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Icon name="lock-closed-outline" size={20} color={themeColors.lightBlue} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Current Password"
+                  placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="password"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Icon name="key-outline" size={20} color={themeColors.lightBlue} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="New Password"
+                  placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="new-password"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Icon name="checkmark-outline" size={20} color={themeColors.lightBlue} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm New Password"
+                  placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="new-password"
+                />
+              </View>
+              
+              {renderButton(
+                "lock-closed-outline", 
+                "Update Password", 
+                handleUpdatePassword,
+                themeColors.lightBlue,
+                themeColors.darkNavy,
+                loading
+              )}
+            </LinearGradient>
           </View>
-          <View style={[styles.section, styles.deleteSection]}>
-            <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={handleDeleteAccount}>
-              <Icon name="trash-outline" size={20} color={colors.card} style={styles.buttonIcon} />
-              <Text style={styles.deleteButtonText}>Delete Account</Text>
-            </TouchableOpacity>
+
+          <View style={styles.sectionContainer}>
+            <LinearGradient
+              colors={[themeColors.darkNavyLight, themeColors.darkNavy]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.section, styles.deleteSection]}
+            >
+              <View style={styles.dangerZoneContainer}>
+                <Text style={styles.dangerZoneText}>DANGER ZONE</Text>
+                <View style={styles.dangerZoneDivider} />
+              </View>
+              
+              {renderButton(
+                "trash-outline", 
+                "Delete Account", 
+                handleDeleteAccount,
+                themeColors.error,
+                themeColors.white,
+                loading
+              )}
+              
+              <Text style={styles.deleteWarning}>
+                This action cannot be undone. All your data will be permanently deleted.
+              </Text>
+            </LinearGradient>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -230,98 +389,103 @@ const SettingsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   scrollContent: {
     flexGrow: 1,
-    padding: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 20,
+    paddingBottom: 40,
+  },
+  sectionContainer: {
+    width: '100%',
+    marginBottom: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 5,
   },
   section: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: colors.card,
     borderRadius: 16,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(164, 212, 228, 0.15)',
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   sectionTitle: {
-    ...textStyles.subtitle,
-    color: colors.primary,
-    marginBottom: spacing.md,
     fontSize: 20,
     fontWeight: '700',
-    textAlign: 'center',
+    color: themeColors.white,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.md,
+    paddingHorizontal: 16,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: colors.primary + '20',
+    borderColor: 'rgba(164, 212, 228, 0.2)',
     height: 50,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
-    elevation: 1,
   },
   input: {
     flex: 1,
     height: 50,
-    color: colors.text,
+    color: themeColors.white,
     fontSize: 16,
-    fontWeight: '500',
-    backgroundColor: 'transparent',
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   button: {
-    backgroundColor: colors.primary,
     borderRadius: 12,
-    padding: spacing.md,
-    alignItems: 'center',
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: spacing.sm,
+    alignItems: 'center',
+    marginTop: 8,
   },
   buttonIcon: {
-    marginRight: spacing.sm,
+    marginRight: 8,
   },
   buttonText: {
-    color: colors.card,
     fontSize: 16,
     fontWeight: '600',
   },
   deleteSection: {
-    padding: spacing.sm,
-    marginBottom: spacing.lg,
+    padding: 20,
+  },
+  dangerZoneContainer: {
     alignItems: 'center',
+    marginBottom: 20,
   },
-  deleteButton: {
-    backgroundColor: colors.error,
-    marginTop: 0,
-    marginBottom: 0,
-    width: '100%',
+  dangerZoneText: {
+    color: themeColors.error,
+    fontWeight: '800',
+    fontSize: 14,
+    letterSpacing: 1,
+    marginBottom: 8,
   },
-  deleteButtonText: {
-    color: colors.card,
-    fontSize: 16,
-    fontWeight: '600',
+  dangerZoneDivider: {
+    width: 60,
+    height: 2,
+    backgroundColor: themeColors.error,
+    opacity: 0.5,
   },
-  inputIcon: {
-    marginRight: spacing.sm,
-    color: colors.primary,
+  deleteWarning: {
+    textAlign: 'center',
+    marginTop: 16,
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 13,
+    fontStyle: 'italic',
   },
 });
 
-export default SettingsScreen; 
+export default SettingsScreen;

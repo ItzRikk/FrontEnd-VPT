@@ -20,6 +20,15 @@ import { supabase } from '../api/supabaseClient';
 
 const { width, height } = Dimensions.get('window');
 
+const themeColors = {
+  darkNavy: '#0E1E32', // Dark navy blue background
+  goldAccent: '#D49B45', // Gold/orange accent color
+  lightBlue: '#A4D4E4', // Light blue for graphs/lines
+  white: '#FFFFFF',
+  offWhite: 'rgba(255, 255, 255, 0.8)',
+  transparent: 'transparent',
+};
+
 const FrostedCard = ({ style, children, intensity = 60 }) => (
   <View style={[styles.frostedCardContainer, style]}>
     <BlurView
@@ -35,7 +44,7 @@ const FrostedCard = ({ style, children, intensity = 60 }) => (
 
 const InputField = ({ icon, ...props }) => (
   <View style={styles.inputContainer}>
-    <Icon name={icon} size={20} color="rgba(255, 255, 255, 0.6)" style={styles.inputIcon} />
+    <Icon name={icon} size={20} color={themeColors.lightBlue} style={styles.inputIcon} />
     <TextInput
       style={styles.input}
       placeholderTextColor="rgba(255, 255, 255, 0.6)"
@@ -95,7 +104,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         >
           <View style={styles.content}>
             <LinearGradient
-              colors={[colors.primary, '#FF9500']}
+              colors={[themeColors.darkNavy, '#0A1726']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.welcomeCard}
@@ -103,7 +112,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
               <View style={styles.headerContainer}>
                 <View style={styles.logoContainer}>
                   <Image 
-                    source={require('../../assets/VPT-logo.png')}
+                    source={require('../../assets/VPT-logo-csumb-1.png')}
                     style={styles.logo}
                     resizeMode="cover"
                   />
@@ -126,14 +135,14 @@ const ForgotPasswordScreen = ({ navigation }) => {
                 />
 
                 <TouchableOpacity
-                  style={[styles.submitButton]}
+                  style={styles.submitButton}
                   onPress={handleResetPassword}
                   disabled={loading}
                 >
                   <Icon 
                     name={loading ? "reload-outline" : "paper-plane-outline"} 
                     size={20} 
-                    color={colors.primary} 
+                    color={themeColors.darkNavy} 
                     style={styles.submitIcon}
                   />
                   <Text style={styles.submitButtonText}>
@@ -149,7 +158,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
                   <Icon 
                     name="arrow-back-outline" 
                     size={16} 
-                    color={colors.card} 
+                    color={themeColors.white} 
                     style={styles.backIcon}
                   />
                   <Text style={styles.backButtonText}>
@@ -159,17 +168,16 @@ const ForgotPasswordScreen = ({ navigation }) => {
               </View>
             </LinearGradient>
 
-            {/* Decorative Footer */}
             <View style={styles.footerContainer}>
               <View style={styles.footerIconRow}>
                 <View style={styles.footerIconWrapper}>
-                  <Icon name="barbell-outline" size={24} color={colors.primary} />
+                  <Icon name="barbell-outline" size={20} color={themeColors.goldAccent} />
                 </View>
                 <View style={styles.footerIconWrapper}>
-                  <Icon name="bicycle-outline" size={24} color={colors.primary} />
+                  <Icon name="bicycle-outline" size={20} color={themeColors.goldAccent} />
                 </View>
                 <View style={styles.footerIconWrapper}>
-                  <Icon name="fitness-outline" size={24} color={colors.primary} />
+                  <Icon name="fitness-outline" size={20} color={themeColors.goldAccent} />
                 </View>
               </View>
               <View style={styles.motivationContainer}>
@@ -195,7 +203,7 @@ const styles = StyleSheet.create({
   },
   background: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.darkNavy,
   },
   scrollContent: {
     flexGrow: 1,
@@ -212,7 +220,7 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#000000',
+    borderColor: themeColors.lightBlue,
     padding: 20,
     shadowColor: '#000',
     shadowOffset: {
@@ -228,31 +236,31 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: themeColors.darkNavy,
     marginBottom: 16,
     borderWidth: 2,
-    borderColor: colors.card,
+    borderColor: themeColors.goldAccent,
   },
   logo: {
     width: '100%',
     height: '100%',
   },
   title: {
-    color: colors.card,
+    color: themeColors.white,
     textAlign: 'center',
     marginBottom: 8,
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '600',
   },
   subtitle: {
-    color: colors.card,
+    color: themeColors.lightBlue,
     textAlign: 'center',
-    opacity: 0.8,
-    fontSize: 14,
+    opacity: 0.9,
+    fontSize: 16,
   },
   formContainer: {
     width: '100%',
@@ -260,27 +268,26 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 12,
     paddingHorizontal: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(164, 212, 228, 0.2)', // Lighter version of lightBlue
     height: 50,
   },
   inputIcon: {
     marginRight: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
   },
   input: {
     flex: 1,
     height: 50,
-    color: colors.card,
+    color: themeColors.white,
     fontSize: 16,
   },
   submitButton: {
     height: 50,
-    backgroundColor: colors.card,
+    backgroundColor: themeColors.goldAccent,
     borderRadius: 12,
     flexDirection: 'row',
     justifyContent: 'center',
@@ -291,7 +298,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   submitButtonText: {
-    color: colors.primary,
+    color: themeColors.darkNavy,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -306,7 +313,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   backButtonText: {
-    color: colors.card,
+    color: themeColors.white,
     fontSize: 14,
   },
   footerContainer: {
@@ -321,39 +328,39 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   footerIconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: `${colors.primary}10`,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: themeColors.darkNavy,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 8,
+    marginHorizontal: 12,
     borderWidth: 1,
-    borderColor: `${colors.primary}30`,
+    borderColor: `${themeColors.goldAccent}30`,
   },
   motivationContainer: {
     alignItems: 'center',
     paddingHorizontal: 32,
   },
   motivationText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: colors.primary,
+    color: themeColors.goldAccent,
     textAlign: 'center',
     fontStyle: 'italic',
   },
   motivationDivider: {
     width: 40,
     height: 2,
-    backgroundColor: `${colors.primary}30`,
+    backgroundColor: `${themeColors.lightBlue}30`,
     marginVertical: 8,
   },
   motivationSubtext: {
     fontSize: 14,
-    color: colors.primary,
+    color: themeColors.goldAccent,
     opacity: 0.8,
     textAlign: 'center',
   },
 });
 
-export default ForgotPasswordScreen; 
+export default ForgotPasswordScreen;

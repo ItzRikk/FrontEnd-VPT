@@ -13,8 +13,8 @@ export const colors = {
   success: '#34C759',
   overlay: 'rgba(0, 0, 0, 0.5)',
   gradient: {
-    start: '#FF3B30',
-    end: '#FF9500',
+    start: '#0E2747',
+    end: '#B9D9EB',
   }
 };
 

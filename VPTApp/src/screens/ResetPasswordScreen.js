@@ -259,4 +259,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ResetPasswordScreen; 
+export default ResetPasswordScreen;

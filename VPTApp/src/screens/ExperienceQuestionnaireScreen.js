@@ -9,16 +9,28 @@ import {
   Alert,
   ActivityIndicator,
   Dimensions,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { colors, textStyles, buttonStyles, layoutStyles } from '../styles/sharedStyles';
 import { supabase } from '../api/supabaseClient';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/Ionicons';
-import Header from '../components/Header';
 
 const { width } = Dimensions.get('window');
+
+const themeColors = {
+  darkNavy: '#0E1E32', // Dark navy blue background
+  darkNavyDarker: '#0A1726', // Darker navy for cards and backgrounds
+  goldAccent: '#D49B45', // Gold/orange accent color
+  lightBlue: '#A4D4E4', // Light blue for graphs/lines
+  white: '#FFFFFF',
+  offWhite: 'rgba(255, 255, 255, 0.8)',
+  transparent: 'transparent',
+  lightGoldBg: 'rgba(212, 155, 69, 0.1)', // Light gold for selected options
+  cardBg: '#1B2D45', // Deeper blue for card backgrounds (from image)
+  questionNumberBg: '#D8A554', // Gold circle background for question numbers
+};
 
 const FrostedCard = ({ style, children, intensity = 60 }) => (
   <View style={[styles.frostedCardContainer, style]}>
@@ -198,38 +210,38 @@ const ExperienceQuestionnaireScreen = () => {
 
   const isComplete = Object.keys(answers).length === questions.length;
 
+  // Loading state with matching dark theme
   if (fetchingQuestions) {
     return (
-      <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
-        <Header title="Experience Assessment" />
+      <SafeAreaView style={styles.container} edges={['top']}>
         <LinearGradient
-          colors={[colors.primary, '#FF9500']}
+          colors={[themeColors.darkNavy, '#0A1726']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.card} />
-          <Text style={[textStyles.body, styles.loadingText]}>Loading questions...</Text>
+          <ActivityIndicator size="large" color={themeColors.goldAccent} />
+          <Text style={styles.loadingText}>Loading questions...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
+  // Error state with matching dark theme
   if (questions.length === 0) {
     return (
-      <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
-        <Header title="Experience Assessment" />
+      <SafeAreaView style={styles.container} edges={['top']}>
         <LinearGradient
-          colors={[colors.primary, '#FF9500']}
+          colors={[themeColors.darkNavy, '#0A1726']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.loadingContainer}>
-          <Icon name="alert-circle-outline" size={60} color={colors.card} />
-          <Text style={[textStyles.title, styles.errorText]}>No questions available</Text>
-          <Text style={[textStyles.body, styles.errorSubtext]}>
+          <Icon name="alert-circle-outline" size={60} color={themeColors.goldAccent} />
+          <Text style={styles.errorText}>No questions available</Text>
+          <Text style={styles.errorSubtext}>
             Please contact support if this issue persists
           </Text>
         </View>
@@ -238,59 +250,71 @@ const ExperienceQuestionnaireScreen = () => {
   }
 
   return (
-    <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
-      <Header title="Experience Assessment" />
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Icon name="fitness-outline" size={40} color={colors.primary} style={styles.headerIcon} />
-          <Text style={[textStyles.subtitle, styles.subtitle]}>
-            Let's assess your fitness experience level
-          </Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <LinearGradient
+        colors={[themeColors.darkNavy, themeColors.darkNavyDarker]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <Image 
+            source={require('../../assets/VPT-logo-csumb-1.png')}
+            style={styles.logo}
+            resizeMode="cover"
+          />
         </View>
-
-        {questions.map((question) => (
-          <FrostedCard key={question.id} style={styles.questionCard}>
-            <View style={styles.questionContainer}>
-              <Text style={styles.questionText}>{question.question}</Text>
-              {question.options.map((option) => (
-                <TouchableOpacity
-                  key={option.id}
-                  style={[
-                    styles.optionButton,
-                    answers[question.id] === option.id && styles.selectedOption
-                  ]}
-                  onPress={() => handleAnswer(question.id, option.id)}
-                  disabled={loading}
-                >
-                  <View style={[
-                    styles.optionIconContainer,
-                    answers[question.id] === option.id && styles.selectedIconContainer
-                  ]}>
-                    <Icon 
-                      name={option.icon || "radio-button-off"} 
-                      size={24} 
-                      color={answers[question.id] === option.id ? colors.card : colors.primary} 
-                    />
-                  </View>
-                  <View style={styles.optionTextContainer}>
-                    <Text style={[
-                      styles.optionTitle,
-                      answers[question.id] === option.id && styles.selectedOptionText
-                    ]}>
-                      {option.text}
-                    </Text>
-                  </View>
-                  {answers[question.id] === option.id && (
-                    <View style={styles.checkmarkContainer}>
-                      <Icon name="checkmark-circle" size={24} color={colors.primary} />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              ))}
+        <Text style={styles.title}>Experience Assessment</Text>
+        <Text style={styles.subtitle}>
+          Let's assess your fitness experience level
+        </Text>
+      </View>
+      
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {questions.map((question, index) => (
+          <View key={question.id} style={styles.questionCardWrapper}>
+            <View style={styles.questionNumberCircle}>
+              <Text style={styles.questionNumber}>{index + 1}</Text>
             </View>
-          </FrostedCard>
+            <View style={styles.questionCard}>
+              <View style={styles.questionContainer}>
+                <Text style={styles.questionText}>{question.question}</Text>
+                {question.options.map((option) => {
+                  const isSelected = answers[question.id] === option.id;
+                  return (
+                    <TouchableOpacity
+                      key={option.id}
+                      style={styles.optionButton}
+                      onPress={() => handleAnswer(question.id, option.id)}
+                      disabled={loading}
+                    >
+                      <View style={styles.radioContainer}>
+                        <View style={[
+                          styles.radioOuter,
+                          isSelected && styles.radioOuterSelected
+                        ]}>
+                          {isSelected && <View style={styles.radioInner} />}
+                        </View>
+                      </View>
+                      <Text style={[
+                        styles.optionText,
+                        isSelected && styles.selectedOptionText
+                      ]}>
+                        {option.text}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          </View>
         ))}
-
+        
         <TouchableOpacity
           style={[
             styles.submitButton,
@@ -299,174 +323,276 @@ const ExperienceQuestionnaireScreen = () => {
           onPress={handleSubmit}
           disabled={!isComplete || loading}
         >
-          {loading ? (
-            <ActivityIndicator color={colors.primary} />
-          ) : (
-            <>
-              <View style={styles.submitIconContainer}>
-                <Icon 
-                  name="checkmark-circle-outline" 
-                  size={24} 
-                  color={(!isComplete || loading) ? colors.textSecondary : colors.primary} 
-                />
-              </View>
-              <Text style={[
-                styles.submitButtonText,
-                (!isComplete || loading) && styles.disabledButtonText
-              ]}>
-                Submit
-              </Text>
-            </>
-          )}
+          <Icon 
+            name={loading ? "reload-outline" : "checkmark-circle-outline"} 
+            size={20} 
+            color={themeColors.darkNavy} 
+            style={styles.submitIcon}
+          />
+          <Text style={styles.submitButtonText}>
+            {loading ? 'Submitting...' : 'Submit Assessment'}
+          </Text>
         </TouchableOpacity>
+        
+        <View style={styles.footerContainer}>
+          <View style={styles.footerIconRow}>
+            <View style={styles.footerIconWrapper}>
+              <Icon name="barbell-outline" size={20} color={themeColors.goldAccent} />
+            </View>
+            <View style={styles.footerIconWrapper}>
+              <Icon name="bicycle-outline" size={20} color={themeColors.goldAccent} />
+            </View>
+            <View style={styles.footerIconWrapper}>
+              <Icon name="fitness-outline" size={20} color={themeColors.goldAccent} />
+            </View>
+          </View>
+          <View style={styles.motivationContainer}>
+            <Text style={styles.motivationText}>
+              "Transform your fitness journey with VPT"
+            </Text>
+            <View style={styles.motivationDivider} />
+            <Text style={styles.motivationSubtext}>
+              Personalized workouts. Expert guidance. Real results.
+            </Text>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
+  container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 24,
-    marginTop: 16,
+    marginVertical: 24,
+    paddingHorizontal: 20,
   },
-  headerIcon: {
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    overflow: 'hidden',
+    backgroundColor: themeColors.darkNavy,
     marginBottom: 16,
+    borderWidth: 2,
+    borderColor: themeColors.goldAccent,
+  },
+  logo: {
+    width: '100%',
+    height: '100%',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '600',
+    color: themeColors.white,
+    textAlign: 'center',
+    marginBottom: 8,
   },
   subtitle: {
+    fontSize: 16,
+    color: themeColors.lightBlue,
     textAlign: 'center',
-    color: colors.text,
+    opacity: 0.9,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  questionCardWrapper: {
+    marginBottom: 20,
+    position: 'relative',
+    paddingTop: 15,
+  },
+  questionNumberCircle: {
+    position: 'absolute',
+    top: 0,
+    left: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: themeColors.questionNumberBg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  questionNumber: {
+    color: themeColors.darkNavy,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   questionCard: {
-    marginBottom: 16,
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: themeColors.cardBg,
+    borderRadius: 12,
+    overflow: 'hidden',
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 16,
   },
   questionContainer: {
-    marginBottom: 16,
+    width: '100%',
   },
   questionText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
+    color: themeColors.white,
+    marginBottom: 20,
+    paddingRight: 10,
   },
   optionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: 'transparent',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
     marginBottom: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+  },
+  radioContainer: {
+    marginRight: 12,
+  },
+  radioOuter: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: themeColors.lightBlue,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  radioOuterSelected: {
+    borderColor: themeColors.goldAccent,
+  },
+  radioInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: themeColors.goldAccent,
   },
   selectedOption: {
-    backgroundColor: `${colors.primary}10`,
-    borderColor: colors.primary,
+    backgroundColor: themeColors.lightGoldBg,
+    borderColor: themeColors.goldAccent,
   },
   optionIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   selectedIconContainer: {
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.goldAccent,
   },
-  optionTextContainer: {
+  optionText: {
     flex: 1,
-  },
-  optionTitle: {
     fontSize: 15,
-    fontWeight: '500',
-    color: colors.text,
+    color: themeColors.white,
   },
   selectedOptionText: {
-    color: colors.primary,
-    fontWeight: '600',
+    color: themeColors.goldAccent,
+    fontWeight: '500',
   },
-  checkmarkContainer: {
+  checkmark: {
     marginLeft: 8,
   },
   submitButton: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: colors.primary,
+    alignItems: 'center',
+    backgroundColor: themeColors.goldAccent,
+    borderRadius: 12,
+    paddingVertical: 14,
+    marginTop: 8,
+    marginBottom: 16,
   },
   disabledButton: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
-  submitIconContainer: {
+  submitIcon: {
     marginRight: 8,
   },
   submitButtonText: {
-    ...textStyles.subtitle,
-    color: colors.text,
-  },
-  disabledButtonText: {
-    color: colors.textSecondary,
+    fontSize: 16,
+    fontWeight: '600',
+    color: themeColors.darkNavy,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.card,
+    padding: 20,
   },
   loadingText: {
-    color: colors.text,
+    fontSize: 16,
+    color: themeColors.white,
     marginTop: 16,
   },
   errorText: {
-    color: colors.text,
+    fontSize: 20,
+    fontWeight: '600',
+    color: themeColors.white,
     marginTop: 16,
     textAlign: 'center',
   },
   errorSubtext: {
-    color: colors.text,
+    fontSize: 16,
+    color: themeColors.lightBlue,
     marginTop: 8,
     textAlign: 'center',
     opacity: 0.8,
   },
-  frostedCardContainer: {
-    borderRadius: 24,
-    overflow: 'hidden',
-    borderColor: 'rgba(0, 0, 0, 0.1)',
-    borderWidth: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 20,
+  footerContainer: {
+    width: '100%',
+    paddingVertical: 24,
+    alignItems: 'center',
+    marginTop: 16,
   },
-  frostedContent: {
-    padding: 24,
+  footerIconRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  footerIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: themeColors.darkNavy,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 12,
+    borderWidth: 1,
+    borderColor: `${themeColors.goldAccent}30`,
+  },
+  motivationContainer: {
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  motivationText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: themeColors.goldAccent,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  motivationDivider: {
+    width: 40,
+    height: 2,
+    backgroundColor: `${themeColors.lightBlue}30`,
+    marginVertical: 8,
+  },
+  motivationSubtext: {
+    fontSize: 14,
+    color: themeColors.goldAccent,
+    opacity: 0.8,
+    textAlign: 'center',
   },
 });
 
-export default ExperienceQuestionnaireScreen; 
+export default ExperienceQuestionnaireScreen;

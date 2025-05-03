@@ -22,6 +22,15 @@ import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
+const themeColors = {
+  darkNavy: '#0E1E32', // Dark navy blue background
+  goldAccent: '#D49B45', // Gold/orange accent color
+  lightBlue: '#A4D4E4', // Light blue for graphs/lines
+  white: '#FFFFFF',
+  offWhite: 'rgba(255, 255, 255, 0.8)',
+  transparent: 'transparent',
+};
+
 const FrostedCard = ({ style, children, intensity = 60 }) => (
   <View style={[styles.frostedCardContainer, style]}>
     <BlurView
@@ -37,10 +46,10 @@ const FrostedCard = ({ style, children, intensity = 60 }) => (
 
 const InputField = ({ icon, isPassword, ...props }) => {
   const [showPassword, setShowPassword] = useState(false);
-
+  
   return (
     <View style={styles.inputContainer}>
-      <Icon name={icon} size={20} color="rgba(255, 255, 255, 0.6)" style={styles.inputIcon} />
+      <Icon name={icon} size={20} color={themeColors.lightBlue} style={styles.inputIcon} />
       <TextInput
         style={styles.input}
         placeholderTextColor="rgba(255, 255, 255, 0.6)"
@@ -55,7 +64,7 @@ const InputField = ({ icon, isPassword, ...props }) => {
           <Icon 
             name={showPassword ? "eye-off-outline" : "eye-outline"} 
             size={20} 
-            color="rgba(255, 255, 255, 0.6)" 
+            color={themeColors.lightBlue} 
           />
         </TouchableOpacity>
       )}
@@ -108,14 +117,13 @@ const LandingScreen = ({ navigation }) => {
 
   const handleSubmit = async () => {
     if (loading) return;
-
     try {
       setLoading(true);
       if (isLogin) {
         // Check if input is email or username
         const isEmail = email.includes('@');
         let authData;
-
+        
         if (isEmail) {
           // Login with email
           const { data, error } = await supabase.auth.signInWithPassword({
@@ -131,12 +139,12 @@ const LandingScreen = ({ navigation }) => {
             .select('email')
             .eq('username', email.trim())
             .single();
-
+            
           if (profileError || !profileData) {
             Alert.alert('Login Error', 'Invalid username or password');
             return;
           }
-
+          
           // Then sign in with the email
           const { data, error } = await supabase.auth.signInWithPassword({
             email: profileData.email,
@@ -158,7 +166,7 @@ const LandingScreen = ({ navigation }) => {
             .select('id')
             .eq('user_id', userId)
             .single();
-
+            
           if (!questionnaireData) {
             // No questionnaire found, redirect to onboarding
             navigation.navigate('Questionnaire');
@@ -192,7 +200,7 @@ const LandingScreen = ({ navigation }) => {
           Alert.alert('Error', 'Please accept the terms and conditions');
           return;
         }
-
+        
         // Create user in Supabase Auth
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
@@ -217,6 +225,7 @@ const LandingScreen = ({ navigation }) => {
           const upsertEmail = email.trim();
           const upsertName = name.trim();
           const upsertUsername = username.trim();
+          
           // Insert into userProfile
           const { error: profileError } = await supabase
             .from('userProfile')
@@ -228,7 +237,7 @@ const LandingScreen = ({ navigation }) => {
               terms_accepted_at: true,
               is_admin: false
             });
-
+            
           if (profileError) {
             Alert.alert('Profile Error', profileError.message);
             // Clear fields on error
@@ -240,11 +249,12 @@ const LandingScreen = ({ navigation }) => {
             setCanAcceptTerms(false);
             return;
           }
-
+          
           Alert.alert(
             'Success',
             'Account created! Please check your email for the verification link.'
           );
+          
           // Clear all fields after successful signup
           setEmail('');
           setPassword('');
@@ -296,7 +306,7 @@ const LandingScreen = ({ navigation }) => {
         >
           <View style={styles.content}>
             <LinearGradient
-              colors={[colors.primary, '#FF9500']}
+              colors={[themeColors.darkNavy, '#0A1726']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.welcomeCard}
@@ -304,7 +314,7 @@ const LandingScreen = ({ navigation }) => {
               <View style={styles.headerContainer}>
                 <View style={styles.logoContainer}>
                   <Image 
-                    source={require('../../assets/VPT-logo.png')}
+                    source={require('../../assets/VPT-logo-csumb-1.png')}
                     style={styles.logo}
                     resizeMode="cover"
                   />
@@ -314,7 +324,6 @@ const LandingScreen = ({ navigation }) => {
                   {isLogin ? 'Sign in to continue' : 'Create your account'}
                 </Text>
               </View>
-
               <View style={styles.formContainer}>
                 {!isLogin && (
                   <InputField
@@ -325,7 +334,6 @@ const LandingScreen = ({ navigation }) => {
                     autoCapitalize="words"
                   />
                 )}
-
                 {!isLogin && (
                   <InputField
                     icon="at-outline"
@@ -336,7 +344,6 @@ const LandingScreen = ({ navigation }) => {
                     autoComplete="username"
                   />
                 )}
-
                 <InputField
                   icon="mail-outline"
                   placeholder="Email or Username"
@@ -346,7 +353,6 @@ const LandingScreen = ({ navigation }) => {
                   autoCapitalize="none"
                   autoComplete="email"
                 />
-
                 <InputField
                   icon="lock-closed-outline"
                   placeholder="Password"
@@ -355,7 +361,6 @@ const LandingScreen = ({ navigation }) => {
                   autoComplete="password"
                   isPassword
                 />
-
                 {/* Terms acceptance for signup only, directly under password */}
                 {!isLogin && (
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
@@ -375,7 +380,6 @@ const LandingScreen = ({ navigation }) => {
                     </TouchableOpacity>
                   </View>
                 )}
-
                 <TouchableOpacity
                   style={[styles.submitButton]}
                   onPress={handleSubmit}
@@ -384,14 +388,13 @@ const LandingScreen = ({ navigation }) => {
                   <Icon 
                     name={loading ? "reload-outline" : (isLogin ? "log-in-outline" : "person-add-outline")} 
                     size={20} 
-                    color={colors.primary} 
+                    color={themeColors.darkNavy} 
                     style={styles.submitIcon}
                   />
                   <Text style={styles.submitButtonText}>
                     {loading ? 'Loading...' : (isLogin ? 'Sign In' : 'Sign Up')}
                   </Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity
                   style={styles.switchButton}
                   onPress={() => setIsLogin(!isLogin)}
@@ -400,7 +403,7 @@ const LandingScreen = ({ navigation }) => {
                   <Icon 
                     name={isLogin ? "person-add-outline" : "log-in-outline"} 
                     size={16} 
-                    color={colors.card} 
+                    color={themeColors.white} 
                     style={styles.switchIcon}
                   />
                   <Text style={styles.switchButtonText}>
@@ -409,7 +412,6 @@ const LandingScreen = ({ navigation }) => {
                       : 'Already have an account? Sign In'}
                   </Text>
                 </TouchableOpacity>
-
                 {isLogin && (
                   <TouchableOpacity
                     style={styles.forgotPasswordButton}
@@ -419,7 +421,7 @@ const LandingScreen = ({ navigation }) => {
                     <Icon 
                       name="key-outline" 
                       size={16} 
-                      color={colors.card} 
+                      color={themeColors.lightBlue} 
                       style={styles.forgotPasswordIcon}
                     />
                     <Text style={styles.forgotPasswordText}>
@@ -429,19 +431,18 @@ const LandingScreen = ({ navigation }) => {
                 )}
               </View>
             </LinearGradient>
-
             {/* Decorative Footer */}
             {isLogin ? (
               <View style={styles.footerContainer}>
                 <View style={styles.footerIconRow}>
                   <View style={styles.footerIconWrapper}>
-                    <Icon name="barbell-outline" size={20} color={colors.primary} />
+                    <Icon name="barbell-outline" size={20} color={themeColors.goldAccent} />
                   </View>
                   <View style={styles.footerIconWrapper}>
-                    <Icon name="bicycle-outline" size={20} color={colors.primary} />
+                    <Icon name="bicycle-outline" size={20} color={themeColors.goldAccent} />
                   </View>
                   <View style={styles.footerIconWrapper}>
-                    <Icon name="fitness-outline" size={20} color={colors.primary} />
+                    <Icon name="fitness-outline" size={20} color={themeColors.goldAccent} />
                   </View>
                 </View>
                 <View style={styles.motivationContainer}>
@@ -458,13 +459,13 @@ const LandingScreen = ({ navigation }) => {
               <View style={styles.footerContainer}>
                 <View style={styles.footerIconRow}>
                   <View style={styles.footerIconWrapper}>
-                    <Icon name="barbell-outline" size={20} color={colors.primary} />
+                    <Icon name="barbell-outline" size={20} color={themeColors.goldAccent} />
                   </View>
                   <View style={styles.footerIconWrapper}>
-                    <Icon name="bicycle-outline" size={20} color={colors.primary} />
+                    <Icon name="bicycle-outline" size={20} color={themeColors.goldAccent} />
                   </View>
                   <View style={styles.footerIconWrapper}>
-                    <Icon name="fitness-outline" size={20} color={colors.primary} />
+                    <Icon name="fitness-outline" size={20} color={themeColors.goldAccent} />
                   </View>
                 </View>
               </View>
@@ -487,7 +488,7 @@ const LandingScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.darkNavy,
   },
   scrollContent: {
     flexGrow: 1,
@@ -504,7 +505,7 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#000000',
+    borderColor: themeColors.lightBlue,
     padding: 20,
     shadowColor: '#000',
     shadowOffset: {
@@ -524,25 +525,25 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: themeColors.darkNavy,
     marginBottom: 20,
     borderWidth: 2,
-    borderColor: colors.card,
+    borderColor: themeColors.goldAccent,
   },
   logo: {
     width: '100%',
     height: '100%',
   },
   title: {
-    color: colors.card,
+    color: themeColors.white,
     textAlign: 'center',
     marginBottom: 8,
     fontSize: 32,
   },
   subtitle: {
-    color: colors.card,
+    color: themeColors.lightBlue,
     textAlign: 'center',
-    opacity: 0.8,
+    opacity: 0.9,
   },
   formContainer: {
     width: '100%',
@@ -550,22 +551,21 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: 12,
     paddingHorizontal: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(164, 212, 228, 0.2)', // Lighter version of lightBlue
     height: 50,
   },
   inputIcon: {
     marginRight: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
   },
   input: {
     flex: 1,
     height: 50,
-    color: colors.card,
+    color: themeColors.white,
     fontSize: 16,
   },
   passwordToggle: {
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     height: 50,
-    backgroundColor: colors.card,
+    backgroundColor: themeColors.goldAccent,
     borderRadius: 12,
     flexDirection: 'row',
     justifyContent: 'center',
@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   submitButtonText: {
-    color: colors.primary,
+    color: themeColors.darkNavy,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   switchButtonText: {
-    color: colors.card,
+    color: themeColors.white,
     fontSize: 14,
   },
   forgotPasswordButton: {
@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   forgotPasswordText: {
-    color: colors.card,
+    color: themeColors.lightBlue,
     fontSize: 14,
   },
   footerContainer: {
@@ -636,15 +636,15 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: `${colors.primary}10`,
+    backgroundColor: `${themeColors.darkNavy}`,
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 12,
     borderWidth: 1,
-    borderColor: `${colors.primary}30`,
+    borderColor: `${themeColors.goldAccent}30`,
   },
   termsText: {
-    color: colors.card,
+    color: themeColors.lightBlue,
     fontSize: 14,
     textDecorationLine: 'underline',
   },
@@ -653,14 +653,14 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: colors.card,
+    borderColor: themeColors.lightBlue,
     marginRight: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checked: {
-    backgroundColor: '#333', // dark grey
-    borderColor: '#333', // dark grey
+    backgroundColor: themeColors.goldAccent,
+    borderColor: themeColors.goldAccent,
   },
   motivationContainer: {
     alignItems: 'center',
@@ -670,7 +670,7 @@ const styles = StyleSheet.create({
   motivationText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.primary,
+    color: themeColors.goldAccent,
     textAlign: 'center',
     fontStyle: 'italic',
     marginBottom: 4,
@@ -678,16 +678,16 @@ const styles = StyleSheet.create({
   motivationDivider: {
     width: 40,
     height: 2,
-    backgroundColor: `${colors.primary}30`,
+    backgroundColor: `${themeColors.lightBlue}30`,
     marginVertical: 8,
   },
   motivationSubtext: {
     fontSize: 12,
-    color: colors.primary,
+    color: themeColors.goldAccent,
     opacity: 0.8,
     textAlign: 'center',
     marginTop: 0,
   },
 });
 
-export default LandingScreen; 
+export default LandingScreen;

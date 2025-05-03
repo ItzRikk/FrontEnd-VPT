@@ -7,9 +7,27 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  StatusBar,
+  SafeAreaView,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { colors, spacing } from '../styles/sharedStyles';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const themeColors = {
+  darkNavy: '#0E1E32',
+  darkNavyLight: '#162C4A',
+  darkNavyMedium: '#112338',
+  goldAccent: '#D49B45',
+  goldLight: '#E8B76D',
+  goldDark: '#B37F2E',
+  lightBlue: '#A4D4E4',
+  white: '#FFFFFF',
+  warningColor: '#FF6B6B',
+  warningLight: 'rgba(255, 107, 107, 0.15)',
+};
 
 const DisclaimerSection = ({ title, items }) => (
   <View style={styles.section}>
@@ -34,7 +52,9 @@ const HealthQuestions = [
 const DisclaimerModal = ({ visible, onAccept, onClose }) => {
   const [isEndReached, setIsEndReached] = useState(false);
   const scrollViewRef = useRef(null);
-  const hasCalledAccept = useRef(false);
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const isSmallScreen = width < 375;
 
   const handleScroll = ({ nativeEvent }) => {
     const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
@@ -109,230 +129,420 @@ const DisclaimerModal = ({ visible, onAccept, onClose }) => {
     }
   ];
 
+  const safeAreaPadding = {
+    paddingTop: insets.top,
+    paddingBottom: insets.bottom,
+    paddingLeft: insets.left,
+    paddingRight: insets.right,
+  };
+
+  const modalDimensions = {
+    width: Platform.OS === 'ios' 
+      ? width * 0.9 
+      : width > 600 
+        ? width * 0.8 
+        : width * 0.95,
+    maxHeight: Platform.OS === 'ios' 
+      ? height * 0.85 
+      : height > 700 
+        ? height * 0.85 
+        : height * 0.9,
+  };
+
   return (
     <Modal
       visible={visible}
       animationType="slide"
       transparent={true}
       onRequestClose={onClose}
+      statusBarTranslucent
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Terms & Disclaimer</Text>
-            <TouchableOpacity 
-              onPress={isEndReached ? () => { onAccept && onAccept(); onClose && onClose(); } : undefined}
-              style={styles.closeButton}
-              disabled={!isEndReached}
+      <StatusBar barStyle="light-content" backgroundColor="rgba(0, 0, 0, 0.5)" />
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.modalContainer}>
+          <View style={[styles.modalContent, modalDimensions]}>
+            <LinearGradient
+              colors={[themeColors.darkNavyLight, themeColors.darkNavy]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.modalGradient}
             >
-              <Icon 
-                name="close" 
-                size={24} 
-                color={isEndReached ? colors.primary : '#aaa'} 
-              />
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView 
-            ref={scrollViewRef}
-            style={styles.scrollView}
-            onScroll={handleScroll}
-            scrollEventThrottle={400}
-          >
-            <Text style={styles.welcomeText}>
-              Welcome to VPT (Virtual Personal Trainer)
-            </Text>
-            
-            <Text style={styles.pleaseRead}>
-              PLEASE READ THIS DISCLAIMER CAREFULLY BEFORE USING THE APP
-            </Text>
-
-            {disclaimerSections.map((section, index) => (
-              <DisclaimerSection
-                key={index}
-                title={section.title}
-                items={section.items}
-              />
-            ))}
-
-            <View style={styles.divider} />
-
-            <View style={styles.healthQuestionsSection}>
-              <Text style={styles.healthTitle}>
-                Health Screening Questions
-              </Text>
-              <Text style={styles.healthSubtitle}>
-                Please answer these questions honestly for your safety:
-              </Text>
-              
-              {HealthQuestions.map((question, index) => (
-                <View key={index} style={styles.questionItem}>
-                  <Text style={styles.bulletPoint}>•</Text>
-                  <Text style={styles.questionText}>{question}</Text>
-                </View>
-              ))}
-
-              <View style={styles.warningBox}>
-                <Icon name="warning-outline" size={24} color={colors.warning} style={styles.warningIcon} />
-                <Text style={styles.warningText}>
-                  If you answered YES to any of these questions, we strongly recommend that you stop using this app and seek medical advice before engaging in any physical activity.
+              <View style={styles.header}>
+                <Text style={[
+                  styles.title, 
+                  isSmallScreen && styles.smallTitle
+                ]}>
+                  Terms & Disclaimer
                 </Text>
+                <TouchableOpacity 
+                  onPress={isEndReached ? () => { onAccept && onAccept(); onClose && onClose(); } : undefined}
+                  style={[
+                    styles.closeButton, 
+                    !isEndReached && styles.disabledButton,
+                    { padding: isSmallScreen ? 6 : 8 }
+                  ]}
+                  disabled={!isEndReached}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Icon 
+                    name="close" 
+                    size={isSmallScreen ? 20 : 24} 
+                    color={isEndReached ? themeColors.goldAccent : 'rgba(255, 255, 255, 0.4)'} 
+                  />
+                </TouchableOpacity>
               </View>
-            </View>
+              
+              <ScrollView 
+                ref={scrollViewRef}
+                style={styles.scrollView}
+                contentContainerStyle={[
+                  styles.scrollContent,
+                  isSmallScreen && styles.smallPadding
+                ]}
+                onScroll={handleScroll}
+                scrollEventThrottle={400}
+                showsVerticalScrollIndicator={false}
+              >
+                <Text style={[
+                  styles.welcomeText,
+                  isSmallScreen && styles.smallWelcomeText
+                ]}>
+                  Welcome to VPT (Virtual Personal Trainer)
+                </Text>
+                
+                <Text style={[
+                  styles.pleaseRead,
+                  isSmallScreen && styles.smallPleaseRead
+                ]}>
+                  PLEASE READ THIS DISCLAIMER CAREFULLY BEFORE USING THE APP
+                </Text>
 
-            <Text style={styles.acknowledgment}>
-              By using VPT, you acknowledge that you have read, understood, and agree to these terms and conditions, and have answered the health screening questions truthfully.
-            </Text>
-          </ScrollView>
+                {disclaimerSections.map((section, index) => (
+                  <DisclaimerSection
+                    key={index}
+                    title={section.title}
+                    items={section.items}
+                  />
+                ))}
 
-          <View style={styles.footer}>
-            {/* No checkbox or accept button here, just a close button in the header */}
+                <View style={styles.divider} />
+
+                <View style={styles.healthQuestionsSection}>
+                  <Text style={[
+                    styles.healthTitle,
+                    isSmallScreen && styles.smallHealthTitle
+                  ]}>
+                    Health Screening Questions
+                  </Text>
+                  <Text style={[
+                    styles.healthSubtitle,
+                    isSmallScreen && styles.smallHealthSubtitle
+                  ]}>
+                    Please answer these questions honestly for your safety:
+                  </Text>
+                  
+                  {HealthQuestions.map((question, index) => (
+                    <View key={index} style={styles.questionItem}>
+                      <Text style={styles.questionBullet}>•</Text>
+                      <Text style={[
+                        styles.questionText,
+                        isSmallScreen && styles.smallQuestionText
+                      ]}>
+                        {question}
+                      </Text>
+                    </View>
+                  ))}
+
+                  <View style={styles.warningBox}>
+                    <Icon 
+                      name="warning-outline" 
+                      size={isSmallScreen ? 20 : 24} 
+                      color={themeColors.warningColor} 
+                      style={styles.warningIcon} 
+                    />
+                    <Text style={[
+                      styles.warningText,
+                      isSmallScreen && styles.smallWarningText
+                    ]}>
+                      If you answered YES to any of these questions, we strongly recommend that you stop using this app and seek medical advice before engaging in any physical activity.
+                    </Text>
+                  </View>
+                </View>
+
+                <Text style={[
+                  styles.acknowledgment,
+                  isSmallScreen && styles.smallAcknowledgment
+                ]}>
+                  By using VPT, you acknowledge that you have read, understood, and agree to these terms and conditions, and have answered the health screening questions truthfully.
+                </Text>
+                
+                {!isEndReached && (
+                  <View style={styles.scrollIndicator}>
+                    <Icon 
+                      name="chevron-down" 
+                      size={isSmallScreen ? 20 : 24} 
+                      color={themeColors.goldAccent} 
+                    />
+                    <Text style={[
+                      styles.scrollText,
+                      isSmallScreen && styles.smallScrollText
+                    ]}>
+                      Continue scrolling to accept
+                    </Text>
+                  </View>
+                )}
+              </ScrollView>
+
+              {isEndReached && (
+                <TouchableOpacity
+                  style={[
+                    styles.acceptButton,
+                    isSmallScreen && styles.smallAcceptButton
+                  ]}
+                  onPress={() => { onAccept && onAccept(); onClose && onClose(); }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[
+                    styles.acceptButtonText,
+                    isSmallScreen && styles.smallAcceptButtonText
+                  ]}>
+                    Accept & Continue
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </LinearGradient>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: colors.background,
     borderRadius: 20,
-    width: Dimensions.get('window').width * 0.9,
-    maxHeight: Dimensions.get('window').height * 0.8,
-    padding: spacing.md,
+    overflow: 'hidden',
+  },
+  modalGradient: {
+    flex: 1,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(164, 212, 228, 0.2)',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.sm,
-    paddingBottom: spacing.sm,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: 'rgba(164, 212, 228, 0.2)',
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: colors.primary,
+    color: themeColors.goldAccent,
+  },
+  smallTitle: {
+    fontSize: 18,
   },
   closeButton: {
-    padding: spacing.xs,
+    padding: 8,
+    borderRadius: 20,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
   scrollView: {
-    marginBottom: spacing.md,
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  smallPadding: {
+    padding: 16,
+    paddingBottom: 30,
   },
   welcomeText: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.primary,
-    marginBottom: spacing.md,
+    color: themeColors.lightBlue,
+    marginBottom: 16,
     textAlign: 'center',
+  },
+  smallWelcomeText: {
+    fontSize: 18,
+    marginBottom: 12,
   },
   pleaseRead: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.lg,
+    color: themeColors.white,
+    marginBottom: 24,
     textAlign: 'center',
   },
+  smallPleaseRead: {
+    fontSize: 12,
+    marginBottom: 18,
+  },
   section: {
-    marginBottom: spacing.lg,
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.primary,
-    marginBottom: spacing.sm,
+    color: themeColors.goldAccent,
+    marginBottom: 12,
   },
   bulletPoint: {
     flexDirection: 'row',
-    marginBottom: spacing.xs,
-    paddingLeft: spacing.sm,
+    marginBottom: 8,
+    paddingLeft: 8,
   },
   bullet: {
     fontSize: 16,
-    color: colors.text,
-    marginRight: spacing.xs,
-    width: 20,
+    color: themeColors.goldAccent,
+    marginRight: 8,
+    width: 16,
   },
   bulletText: {
     flex: 1,
-    fontSize: 16,
-    color: colors.text,
-    lineHeight: 24,
+    fontSize: 15,
+    color: themeColors.white,
+    lineHeight: 22,
   },
   acknowledgment: {
-    fontSize: 16,
+    fontSize: 15,
     fontStyle: 'italic',
-    color: colors.text,
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
+    color: themeColors.lightBlue,
+    marginTop: 16,
+    marginBottom: 32,
     textAlign: 'center',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: 8,
   },
-  footer: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.md,
+  smallAcknowledgment: {
+    fontSize: 13,
+    marginTop: 12,
+    marginBottom: 24,
   },
   healthQuestionsSection: {
-    backgroundColor: '#FFF5F5',
-    padding: spacing.md,
+    backgroundColor: 'rgba(255, 107, 107, 0.08)',
+    padding: 16,
     borderRadius: 12,
-    marginBottom: spacing.lg,
+    marginBottom: 24,
     borderWidth: 1,
-    borderColor: colors.warning,
+    borderColor: 'rgba(255, 107, 107, 0.3)',
   },
   healthTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
-    color: colors.primary,
-    marginBottom: spacing.sm,
+    color: themeColors.warningColor,
+    marginBottom: 8,
     textAlign: 'center',
   },
-  healthSubtitle: {
+  smallHealthTitle: {
     fontSize: 16,
-    color: colors.text,
-    marginBottom: spacing.md,
+  },
+  healthSubtitle: {
+    fontSize: 15,
+    color: themeColors.white,
+    marginBottom: 16,
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  smallHealthSubtitle: {
+    fontSize: 13,
+    marginBottom: 12,
   },
   questionItem: {
     flexDirection: 'row',
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.sm,
+    marginBottom: 12,
+    paddingHorizontal: 8,
+  },
+  questionBullet: {
+    fontSize: 16,
+    color: themeColors.warningColor,
+    marginRight: 8,
+    width: 16,
+  },
+  questionText: {
+    flex: 1,
+    fontSize: 15,
+    color: themeColors.white,
+    lineHeight: 22,
+  },
+  smallQuestionText: {
+    fontSize: 13,
+    lineHeight: 20,
   },
   warningBox: {
-    backgroundColor: `${colors.warning}15`,
+    backgroundColor: 'rgba(255, 107, 107, 0.15)',
     borderRadius: 8,
-    padding: spacing.md,
-    marginTop: spacing.md,
+    padding: 16,
+    marginTop: 16,
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
   warningIcon: {
-    marginRight: spacing.sm,
+    marginRight: 10,
     marginTop: 2,
   },
   warningText: {
     flex: 1,
-    fontSize: 16,
-    color: colors.warning,
+    fontSize: 15,
+    color: themeColors.warningColor,
     fontWeight: '500',
-    lineHeight: 24,
+    lineHeight: 22,
+  },
+  smallWarningText: {
+    fontSize: 13,
+    lineHeight: 20,
   },
   divider: {
     height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.lg,
+    backgroundColor: 'rgba(164, 212, 228, 0.2)',
+    marginVertical: 24,
+  },
+  acceptButton: {
+    backgroundColor: themeColors.goldAccent,
+    margin: 20,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  smallAcceptButton: {
+    margin: 16,
+    padding: 14,
+  },
+  acceptButtonText: {
+    color: themeColors.darkNavy,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  smallAcceptButtonText: {
+    fontSize: 14,
+  },
+  scrollIndicator: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  scrollText: {
+    color: themeColors.goldAccent,
+    fontSize: 14,
+    marginTop: 4,
+  },
+  smallScrollText: {
+    fontSize: 12,
   },
 });
 
-export default DisclaimerModal; 
+export default DisclaimerModal;

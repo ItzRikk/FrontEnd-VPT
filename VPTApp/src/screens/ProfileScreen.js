@@ -6,10 +6,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
-  Platform,
   Image,
+  ScrollView,
+  SafeAreaView,
+  StatusBar,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '../api/supabaseClient';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { colors, textStyles, layoutStyles, spacing } from '../styles/sharedStyles';
@@ -17,49 +21,164 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Header from '../components/Header';
 
-const { width, height } = Dimensions.get('window');
-const CARD_MARGIN = spacing.xs;
-const CARD_WIDTH = (width - spacing.md * 2 - CARD_MARGIN * 2) / 2;
+const themeColors = {
+  darkNavy: '#0E1E32',
+  darkNavyLight: '#162C4A',
+  darkNavyMedium: '#112338',
+  goldAccent: '#D49B45',
+  goldLight: '#E8B76D',
+  goldDark: '#B37F2E',
+  lightBlue: '#A4D4E4',
+  lightBlueDark: '#7BA8B8',
+  white: '#FFFFFF',
+  offWhite: 'rgba(255, 255, 255, 0.9)',
+  transparent: 'transparent',
+};
 
-const FrostedCard = ({ style, children, intensity = 25 }) => (
-  <View style={[styles.frostedCardContainer, style]}>
-    <BlurView
-      intensity={intensity}
-      tint="light"
-      style={StyleSheet.absoluteFill}
-    />
-    <View style={styles.frostedContent}>
-      {children}
-    </View>
+const ActionCard = ({ icon, label, onPress, color = themeColors.goldAccent }) => {
+  const { width } = useWindowDimensions();
+  // Calculate card width based on screen size
+  const cardWidth = width < 350 ? (width - 48) / 2 : (width < 600 ? (width - 56) / 2 : 160);
+  
+  return (
+    <TouchableOpacity 
+      onPress={onPress} 
+      style={[styles.actionCardContainer, { width: cardWidth }]}
+      activeOpacity={0.8}
+    >
+      <LinearGradient
+        colors={[themeColors.darkNavyMedium, themeColors.darkNavy]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.actionCard}
+      >
+        <View style={[styles.iconContainer, { backgroundColor: color }]}>
+          <Icon name={icon} size={26} color={themeColors.darkNavy} />
+        </View>
+        <Text style={styles.actionLabel} numberOfLines={2}>
+          {label}
+        </Text>
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+};
+
+const StatCard = ({ icon, label, value, description }) => (
+  <View style={styles.statCardContainer}>
+    <LinearGradient
+      colors={[themeColors.darkNavyLight, themeColors.darkNavy]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.statCard}
+    >
+      <View style={styles.statHeader}>
+        <View style={styles.statIconContainer}>
+          <Icon name={icon} size={20} color={themeColors.goldAccent} />
+        </View>
+        <Text style={styles.statLabel}>{label}</Text>
+      </View>
+      <Text style={styles.statValue}>{value || 'N/A'}</Text>
+      {description && (
+        <Text style={styles.statDescription} numberOfLines={2}>
+          {description}
+        </Text>
+      )}
+    </LinearGradient>
   </View>
 );
 
-const ActionCard = ({ icon, label, onPress, color = colors.primary }) => (
-  <TouchableOpacity onPress={onPress} style={styles.actionCardContainer}>
-    <View style={[styles.actionCard]}>
+const ProfileHeader = ({ name, avatarUrl }) => {
+  const { width } = useWindowDimensions();
+  const isSmallScreen = width < 350;
+
+  return (
+    <View style={styles.profileHeaderContainer}>
       <LinearGradient
-        colors={[`${colors.primary}10`, `${colors.primary}05`]}
-        style={StyleSheet.absoluteFill}
-      />
-      <BlurView
-        intensity={40}
-        tint="light"
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={[styles.iconContainer, { backgroundColor: color }]}>
-        <Icon name={icon} size={24} color={colors.card} />
-      </View>
-      <Text style={styles.actionLabel} numberOfLines={2}>
-        {label}
-      </Text>
+        colors={[themeColors.darkNavyLight, themeColors.darkNavy]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.profileHeader}
+      >
+        <View style={[styles.avatarContainer, isSmallScreen && { width: 60, height: 60 }]}>
+          {avatarUrl ? (
+            <Image source={{ uri: avatarUrl }} style={[styles.avatar, isSmallScreen && { width: 50, height: 50 }]} />
+          ) : (
+            <View style={[styles.avatarPlaceholder, isSmallScreen && { width: 50, height: 50, borderRadius: 25 }]}>
+              <LinearGradient
+                colors={[themeColors.goldLight, themeColors.goldAccent]}
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <Text style={[styles.avatarInitial, isSmallScreen && { fontSize: 20 }]}>
+                {name.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
+          <View style={[styles.avatarBorder, isSmallScreen && { width: 58, height: 58, borderRadius: 29 }]} />
+        </View>
+
+        <View style={styles.profileInfo}>
+          <Text style={[styles.profileName, isSmallScreen && { fontSize: 18 }]}>{name}</Text>
+          <View style={styles.profileBadge}>
+            <Icon name="fitness" size={14} color={themeColors.darkNavy} style={{ marginRight: 4 }} />
+            <Text style={styles.profileBadgeText}>VPT Member</Text>
+          </View>
+        </View>
+      </LinearGradient>
     </View>
-  </TouchableOpacity>
-);
+  );
+};
+
+const DetailCard = ({ user, experienceLevel }) => {
+  const { width } = useWindowDimensions();
+
+  return (
+    <View style={styles.accountDetailCard}>
+      <LinearGradient
+        colors={[themeColors.darkNavyLight, themeColors.darkNavy]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.accountDetailContent}
+      >
+        <View style={styles.detailRow}>
+          <Icon name="mail-outline" size={18} color={themeColors.lightBlue} />
+          <Text style={styles.detailLabel}>Email</Text>
+          <Text style={[styles.detailValue, width < 350 && { fontSize: 12 }]} numberOfLines={1}>
+            {user?.email}
+          </Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.detailRow}>
+          <Icon name="person-outline" size={18} color={themeColors.lightBlue} />
+          <Text style={styles.detailLabel}>Name</Text>
+          <Text style={[styles.detailValue, width < 350 && { fontSize: 12 }]} numberOfLines={1}>
+            {user?.user_metadata?.name || 'Anonymous User'}
+          </Text>
+        </View>
+        {experienceLevel?.level && (
+          <>
+            <View style={styles.divider} />
+            <View style={styles.detailRow}>
+              <Icon name="fitness-outline" size={18} color={themeColors.lightBlue} />
+              <Text style={styles.detailLabel}>Level</Text>
+              <Text style={[styles.detailValue, width < 350 && { fontSize: 12 }]} numberOfLines={1}>
+                {experienceLevel.level}
+              </Text>
+            </View>
+          </>
+        )}
+      </LinearGradient>
+    </View>
+  );
+};
 
 const ProfileScreen = ({ route, navigation }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [experienceLevel, setExperienceLevel] = useState(null);
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -175,325 +294,404 @@ const ProfileScreen = ({ route, navigation }) => {
       case 'Advanced':
         return 'You have significant experience with weight lifting';
       default:
-        return 'Unable to determine experience level';
+        return 'Complete the questionnaire to set your experience level';
     }
   };
 
   if (loading) {
     return (
-      <SafeAreaView style={[layoutStyles.container, layoutStyles.center]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <SafeAreaView 
+        style={{ 
+          flex: 1, 
+          backgroundColor: themeColors.darkNavy, 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0
+        }}
+      >
+        <LinearGradient
+          colors={[themeColors.darkNavyLight, themeColors.darkNavy]}
+          style={{ position: 'absolute', width: '100%', height: '100%' }}
+        />
+        <ActivityIndicator size="large" color={themeColors.goldAccent} />
+        <Text style={{ color: themeColors.lightBlue, marginTop: 16, fontSize: 16 }}>Loading profile...</Text>
       </SafeAreaView>
     );
   }
 
-  const firstName = user?.user_metadata?.name?.split(' ')[0] || 'Anonymous';
+  const fullName = user?.user_metadata?.name || 'Anonymous User';
+  const padding = {
+    paddingLeft: Math.max(16, insets.left),
+    paddingRight: Math.max(16, insets.right),
+  };
 
   return (
-    <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
+    <SafeAreaView 
+      style={{ 
+        flex: 1, 
+        backgroundColor: themeColors.darkNavy,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0
+      }} 
+      edges={['left', 'right']}
+    >
+      <StatusBar barStyle="light-content" backgroundColor={themeColors.darkNavy} />
+      <LinearGradient
+        colors={[themeColors.darkNavyLight, themeColors.darkNavy]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      
       <Header title="Profile" showBack={false} showSettings={true} />
-      <View style={styles.content}>
-        <View style={styles.cardWrapper}>
-          <LinearGradient
-            colors={[`${colors.primary}10`, `${colors.primary}05`]}
-            style={StyleSheet.absoluteFill}
-          />
-          <BlurView
-            intensity={40}
-            tint="light"
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={styles.welcomeHeader}>
-            <View style={styles.userIconContainer}>
-              <Icon name="person-circle-outline" size={24} color={colors.primary} />
+      
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={[{ paddingBottom: insets.bottom + 20 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.innerContainer, padding]}>
+          <ProfileHeader name={fullName} />
+          
+          {experienceLevel?.level && (
+            <View style={styles.sectionContainer}>
+              <Text style={[styles.sectionTitle, width < 350 && { fontSize: 16 }]}>Experience</Text>
+              <StatCard 
+                icon="fitness-outline"
+                label="Experience Level"
+                value={experienceLevel.level}
+                description={experienceLevel.description}
+              />
             </View>
-            <Text style={[textStyles.title, styles.nameText]}>{firstName}</Text>
+          )}
+          
+          <View style={styles.sectionContainer}>
+            <Text style={[styles.sectionTitle, width < 350 && { fontSize: 16 }]}>Account Details</Text>
+            <DetailCard user={user} experienceLevel={experienceLevel} />
           </View>
-          <View style={styles.experienceSection}>
-            <View style={styles.experienceRow}>
-              <View style={styles.experienceIconContainer}>
-                <Icon name="fitness-outline" size={20} color={colors.primary} />
+          
+          <View style={styles.sectionContainer}>
+            <Text style={[styles.sectionTitle, width < 350 && { fontSize: 16 }]}>Quick Actions</Text>
+            <View style={styles.actionGrid}>
+              <ActionCard
+                icon="fitness"
+                label="Update Experience"
+                onPress={() => navigation.navigate('Questionnaire')}
+                color={themeColors.goldAccent}
+              />
+              <ActionCard
+                icon="barbell-outline"
+                label="Get Started"
+                onPress={() => navigation.navigate('WorkoutEquipment')}
+                color={themeColors.goldAccent}
+              />
+              <ActionCard
+                icon="stats-chart"
+                label="Progress"
+                onPress={() => navigation.navigate('Progress')}
+                color={themeColors.goldAccent}
+              />
+              <ActionCard
+                icon="log-out-outline"
+                label="Sign Out"
+                onPress={handleSignOut}
+                color={themeColors.goldAccent}
+              />
+            </View>
+          </View>
+
+          <View style={styles.footerContainer}>
+            <View style={styles.footerIconRow}>
+              <View style={styles.footerIconWrapper}>
+                <Icon name="barbell-outline" size={22} color={themeColors.goldAccent} />
               </View>
-              <View style={styles.experienceTextContainer}>
-                <Text style={[textStyles.caption, styles.experienceLabel]}>Experience Level</Text>
-                <Text style={[textStyles.subtitle, styles.experienceValue]}>
-                  {experienceLevel?.level || 'N/A'}
-                </Text>
-                <Text style={[textStyles.caption, styles.experienceDescription]} numberOfLines={2}>
-                  {experienceLevel?.description || 'Complete the questionnaire to set your experience level'}
-                </Text>
+              <View style={styles.footerIconWrapper}>
+                <Icon name="bicycle-outline" size={22} color={themeColors.goldAccent} />
+              </View>
+              <View style={styles.footerIconWrapper}>
+                <Icon name="fitness-outline" size={22} color={themeColors.goldAccent} />
               </View>
             </View>
-          </View>
-        </View>
-
-        <View style={styles.cardWrapper}>
-          <LinearGradient
-            colors={[`${colors.primary}10`, `${colors.primary}05`]}
-            style={StyleSheet.absoluteFill}
-          />
-          <BlurView
-            intensity={40}
-            tint="light"
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={styles.sectionHeader}>
-            <Icon name="information-circle-outline" size={24} color={colors.primary} />
-            <Text style={[textStyles.subtitle, styles.sectionTitle]}>Account Details</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Icon name="mail-outline" size={20} color={colors.primary} />
-            <Text style={[textStyles.caption, styles.detailText]}>{user?.email}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Icon name="fitness-outline" size={20} color={colors.primary} />
-            <Text style={[textStyles.caption, styles.detailText]}>
-              {experienceLevel?.level || 'Not set'}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.actionGrid}>
-          <ActionCard
-            icon="fitness"
-            label="Update Experience"
-            onPress={() => navigation.navigate('Questionnaire')}
-            color={colors.primary}
-          />
-          <ActionCard
-            icon="barbell-outline"
-            label="Get Started"
-            onPress={() => navigation.navigate('WorkoutEquipment')}
-            color={colors.primary}
-          />
-          <ActionCard
-            icon="stats-chart"
-            label="Progress"
-            onPress={() => navigation.navigate('Progress')}
-            color={colors.primary}
-          />
-          <ActionCard
-            icon="log-out-outline"
-            label="Sign Out"
-            onPress={handleSignOut}
-            color={colors.primary}
-          />
-        </View>
-
-        {/* Decorative Footer */}
-        <View style={styles.footerContainer}>
-          <View style={styles.footerIconRow}>
-            <View style={styles.footerIconWrapper}>
-              <Icon name="barbell-outline" size={24} color={`${colors.primary}40`} />
-            </View>
-            <View style={styles.footerIconWrapper}>
-              <Icon name="bicycle-outline" size={24} color={`${colors.primary}40`} />
-            </View>
-            <View style={styles.footerIconWrapper}>
-              <Icon name="fitness-outline" size={24} color={`${colors.primary}40`} />
+            <View style={styles.motivationContainer}>
+              <Text style={[styles.motivationText, width < 350 && { fontSize: 14 }]}>
+                "Transform your fitness journey with VPT"
+              </Text>
+              <View style={styles.motivationDivider} />
+              <Text style={[styles.motivationSubtext, width < 350 && { fontSize: 12 }]}>
+                Personalized workouts. Expert guidance. Real results.
+              </Text>
             </View>
           </View>
-          <View style={styles.motivationContainer}>
-            <Text style={styles.motivationText}>
-              "Every rep brings you closer to your goals"
-            </Text>
-            <View style={styles.motivationDivider} />
-            <Text style={styles.motivationSubtext}>
-              Track your progress. Stay motivated. Achieve more.
-            </Text>
-          </View>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  content: {
+  scrollView: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    paddingTop: spacing.md,
   },
-  cardWrapper: {
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.md,
+  innerContainer: {
+    paddingHorizontal: 16,
+  },
+  profileHeaderContainer: {
+    marginVertical: 16,
     borderRadius: 16,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  welcomeHeader: {
+  profileHeader: {
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(164, 212, 228, 0.15)',
+    borderRadius: 16,
   },
-  experienceSection: {
-    padding: spacing.md,
-  },
-  experienceRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  userIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: `${colors.primary}15`,
+  avatarContainer: {
+    width: 70,
+    height: 70,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: spacing.sm,
+    position: 'relative',
   },
-  experienceIconContainer: {
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
+  avatarPlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  avatarBorder: {
+    position: 'absolute',
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    borderWidth: 2,
+    borderColor: themeColors.goldAccent,
+    borderStyle: 'dashed',
+  },
+  avatarInitial: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: themeColors.darkNavy,
+  },
+  profileInfo: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: themeColors.white,
+    marginBottom: 4,
+  },
+  profileBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: themeColors.goldAccent,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  profileBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: themeColors.darkNavy,
+  },
+  sectionContainer: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: themeColors.white,
+    marginBottom: 12,
+  },
+  statCardContainer: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statCard: {
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(164, 212, 228, 0.15)',
+  },
+  statHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  statIconContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: `${colors.primary}15`,
+    backgroundColor: 'rgba(212, 155, 69, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: spacing.sm,
+    marginRight: 8,
   },
-  experienceTextContainer: {
-    flex: 1,
-  },
-  experienceLabel: {
+  statLabel: {
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 2,
-    color: '#000000',
+    color: themeColors.lightBlue,
   },
-  experienceValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-    color: '#000000',
+  statValue: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: themeColors.white,
+    marginBottom: 4,
   },
-  experienceDescription: {
+  statDescription: {
     fontSize: 14,
+    color: themeColors.white,
     opacity: 0.8,
-    color: '#000000',
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+  accountDetailCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  sectionTitle: {
-    marginLeft: spacing.sm,
-    color: '#000000',
+  accountDetailContent: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(164, 212, 228, 0.15)',
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
+    padding: 16,
   },
-  detailText: {
-    marginLeft: spacing.md,
+  detailLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: themeColors.lightBlue,
+    marginLeft: 8,
+    width: 60,
+  },
+  detailValue: {
+    fontSize: 14,
+    color: themeColors.white,
     flex: 1,
-    color: '#000000',
+    textAlign: 'right',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(164, 212, 228, 0.1)',
+    marginHorizontal: 16,
   },
   actionGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
-    marginHorizontal: -CARD_MARGIN,
-    paddingHorizontal: spacing.md,
+    justifyContent: 'space-between',
   },
   actionCardContainer: {
-    width: CARD_WIDTH,
-    margin: CARD_MARGIN,
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   actionCard: {
     borderRadius: 16,
     padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
     alignItems: 'center',
-    overflow: 'hidden',
-    height: 120,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    justifyContent: 'center',
+    height: 110,
+    borderWidth: 1,
+    borderColor: 'rgba(164, 212, 228, 0.15)',
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
-    zIndex: 1,
+    marginBottom: 10,
   },
   actionLabel: {
-    ...textStyles.subtitle,
     fontSize: 14,
+    fontWeight: '600',
+    color: themeColors.white,
     textAlign: 'center',
-    fontWeight: '600',
-    color: colors.text,
-    zIndex: 1,
-  },
-  nameText: {
-    fontSize: 20,
-    fontWeight: '600',
-    flex: 1,
-    color: '#000000',
   },
   footerContainer: {
-    paddingVertical: spacing.lg,
     alignItems: 'center',
-    marginTop: 'auto', // Pushes the footer to the bottom
+    marginTop: 8,
+    paddingVertical: 24,
   },
   footerIconRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: 16,
   },
   footerIconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: `${colors.primary}10`,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(212, 155, 69, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: spacing.sm,
+    marginHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 155, 69, 0.2)',
   },
   motivationContainer: {
     alignItems: 'center',
-    paddingHorizontal: spacing.xl,
   },
   motivationText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.primary,
+    color: themeColors.goldAccent,
     textAlign: 'center',
     fontStyle: 'italic',
   },
   motivationDivider: {
     width: 40,
     height: 2,
-    backgroundColor: `${colors.primary}30`,
-    marginVertical: spacing.sm,
+    backgroundColor: 'rgba(164, 212, 228, 0.2)',
+    marginVertical: 10,
   },
   motivationSubtext: {
     fontSize: 14,
-    color: colors.textSecondary,
+    color: themeColors.goldAccent,
+    opacity: 0.8,
     textAlign: 'center',
   },
 });
