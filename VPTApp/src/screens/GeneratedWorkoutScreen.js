@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   StatusBar,
   Platform,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -22,37 +23,72 @@ const themeColors = {
   white: '#FFFFFF',
 };
 
-const ExerciseCard = ({ exercise }) => (
-  <LinearGradient
-    colors={[themeColors.darkNavyLight, themeColors.darkNavy]}
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 1 }}
-    style={styles.card}
-  >
-    <View style={styles.cardHeader}>
-      <Icon name="barbell-outline" size={22} color={themeColors.goldAccent} style={{ marginRight: 10 }} />
-      <Text style={styles.exerciseName}>{exercise.name}</Text>
-      {exercise.label && (
-        <View style={styles.labelTag}>
-          <Text style={styles.labelText}>{exercise.label}</Text>
+// Helper to normalize exercise names for mapping
+function normalizeName(name) {
+  return name.trim().toLowerCase();
+}
+
+// Map normalized names to images
+const exerciseImages = {
+  'dumbbell chest press': require('../../assets/Dumbbell-Chest-Press.png'),
+  'bodyweight squat': require('../../assets/Bodyweight-Squats.png'),
+  'bodyweight squats': require('../../assets/Bodyweight-Squats.png'),
+  'body weight squats': require('../../assets/Bodyweight-Squats.png'),
+  // Add more mappings as needed
+};
+
+// Helper to capitalize each word
+function capitalizeWords(str) {
+  return str.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+const ExerciseCard = ({ exercise }) => {
+  const normalized = normalizeName(exercise.name);
+  console.log('Exercise name:', exercise.name, 'Normalized:', normalized);
+  return (
+    <>
+      <LinearGradient
+        colors={[themeColors.darkNavyLight, themeColors.darkNavy]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.card}
+      >
+        <View style={styles.cardHeader}>
+          <Icon name="barbell-outline" size={22} color={themeColors.goldAccent} style={{ marginRight: 10 }} />
+          <Text style={styles.exerciseName}>{capitalizeWords(exercise.name)}</Text>
+          {exercise.label && (
+            <View style={styles.labelTag}>
+              <Text style={styles.labelText}>{exercise.label}</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.instruction}>{exercise.instruction}</Text>
+        <View style={styles.detailsRow}>
+          <Text style={styles.detail}><Text style={styles.detailLabel}>Sets:</Text> {exercise.sets}</Text>
+          <Text style={styles.detail}><Text style={styles.detailLabel}>Reps:</Text> {exercise.reps}</Text>
+          <Text style={styles.detail}><Text style={styles.detailLabel}>Rest:</Text> {exercise.rest}s</Text>
+        </View>
+        <View style={styles.detailsRow}>
+          <Text style={styles.detail}><Text style={styles.detailLabel}>Duration:</Text> {exercise.duration} min</Text>
+          <Text style={styles.detail}><Text style={styles.detailLabel}>Level:</Text> {exercise.level}</Text>
+        </View>
+        <View style={styles.detailsRow}>
+          <Text style={styles.detail}><Text style={styles.detailLabel}>Target Reps:</Text> {exercise.target_rep_min} - {exercise.target_rep_max}</Text>
+        </View>
+      </LinearGradient>
+      {/* Show image below the card if available */}
+      {exerciseImages[normalized] && (
+        <View style={styles.imageContainer}>
+          <Image
+            source={exerciseImages[normalized]}
+            style={styles.exerciseImage}
+            resizeMode="contain"
+          />
         </View>
       )}
-    </View>
-    <Text style={styles.instruction}>{exercise.instruction}</Text>
-    <View style={styles.detailsRow}>
-      <Text style={styles.detail}><Text style={styles.detailLabel}>Sets:</Text> {exercise.sets}</Text>
-      <Text style={styles.detail}><Text style={styles.detailLabel}>Reps:</Text> {exercise.reps}</Text>
-      <Text style={styles.detail}><Text style={styles.detailLabel}>Rest:</Text> {exercise.rest}s</Text>
-    </View>
-    <View style={styles.detailsRow}>
-      <Text style={styles.detail}><Text style={styles.detailLabel}>Duration:</Text> {exercise.duration} min</Text>
-      <Text style={styles.detail}><Text style={styles.detailLabel}>Level:</Text> {exercise.level}</Text>
-    </View>
-    <View style={styles.detailsRow}>
-      <Text style={styles.detail}><Text style={styles.detailLabel}>Target Reps:</Text> {exercise.target_rep_min} - {exercise.target_rep_max}</Text>
-    </View>
-  </LinearGradient>
-);
+    </>
+  );
+};
 
 const GeneratedWorkoutScreen = ({ route, navigation }) => {
   const { exercises } = route.params;
@@ -161,6 +197,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 40,
     fontSize: 16,
+  },
+  imageContainer: {
+    width: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 24,
+    alignSelf: 'stretch',
+  },
+  exerciseImage: {
+    width: '100%',
+    height: 280,
   },
 });
 
