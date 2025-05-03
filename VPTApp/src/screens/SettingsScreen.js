@@ -20,6 +20,7 @@ import { colors, spacing, textStyles } from '../styles/sharedStyles';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
 const themeColors = {
   darkNavy: '#0E1E32',
@@ -38,11 +39,15 @@ const themeColors = {
 };
 
 const SettingsScreen = () => {
+  const navigation = useNavigation();
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(false);
   const { width } = useWindowDimensions();
@@ -55,7 +60,8 @@ const SettingsScreen = () => {
 
   const fetchUserData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const session = supabase.auth.session();
+      const user = session ? session.user : null;
       if (user) {
         const { data, error } = await supabase
           .from('userProfile')
@@ -78,8 +84,9 @@ const SettingsScreen = () => {
     if (loading) return;
     try {
       setLoading(true);
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
+      const session = supabase.auth.session();
+      const user = session ? session.user : null;
+      if (!user) {
         Alert.alert('Error', 'Could not get user');
         return;
       }
@@ -94,7 +101,15 @@ const SettingsScreen = () => {
         .from('userProfile')
         .update(updates)
         .eq('user_id', user.id);
-      if (error) throw error;
+
+      if (error) {
+        if (error.code === '23505' && error.message.includes('username')) {
+          Alert.alert('Error', 'This username is already taken. Please choose another one.');
+        } else {
+          Alert.alert('Error', error.message);
+        }
+        return;
+      }
       Alert.alert('Success', 'Profile updated successfully');
       fetchUserData();
     } catch (error) {
@@ -121,14 +136,17 @@ const SettingsScreen = () => {
     }
     try {
       setLoading(true);
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
+      const session = supabase.auth.session();
+      const user = session ? session.user : null;
+      if (!user) {
         Alert.alert('Error', 'Could not get user');
         return;
       }
       // First verify current password
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
+      const session2 = supabase.auth.session();
+      const user2 = session2 ? session2.user : null;
+      const { error: signInError } = await supabase.auth.signIn({
+        email: user2.email,
         password: currentPassword,
       });
       if (signInError) {
@@ -136,7 +154,7 @@ const SettingsScreen = () => {
         return;
       }
       // Update password
-      const { error: updateError } = await supabase.auth.updateUser({
+      const { error: updateError } = await supabase.auth.update({
         password: newPassword
       });
       if (updateError) throw updateError;
@@ -164,18 +182,53 @@ const SettingsScreen = () => {
           onPress: async () => {
             try {
               setLoading(true);
-              const { data: { user }, error: userError } = await supabase.auth.getUser();
-              if (userError || !user) {
+              const session = supabase.auth.session();
+              const user = session ? session.user : null;
+              if (!user) {
                 Alert.alert('Error', 'Could not get user');
                 return;
               }
-              const { error } = await supabase
+
+              // First delete the user profile
+              const { error: profileError } = await supabase
                 .from('userProfile')
                 .delete()
                 .eq('user_id', user.id);
-              if (error) throw error;
-              await supabase.auth.signOut();
-              Alert.alert('Account Deleted', 'Your account has been deleted.');
+
+              if (profileError) throw profileError;
+
+              // Then delete the auth user
+              const { error: deleteError } = await supabase.rpc('delete_user', {
+                user_id: user.id
+              });
+
+              if (deleteError) throw deleteError;
+
+              // Then sign out the user
+              const { error: signOutError } = await supabase.auth.signOut();
+              
+              if (signOutError) {
+                console.error('Error signing out:', signOutError);
+                // Even if sign out fails, we should still show the success message
+                // since the account was deleted
+              }
+
+              Alert.alert(
+                'Account Deleted',
+                'Your account has been successfully deleted.',
+                [
+                  {
+                    text: 'OK',
+                    onPress: () => {
+                      // Navigate to the login screen
+                      navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'Login' }],
+                      });
+                    }
+                  }
+                ]
+              );
             } catch (error) {
               console.error('Error deleting account:', error);
               Alert.alert('Error', 'Failed to delete account. Please try again.');
@@ -309,11 +362,19 @@ const SettingsScreen = () => {
                   placeholderTextColor="rgba(255, 255, 255, 0.5)"
                   value={currentPassword}
                   onChangeText={setCurrentPassword}
-                  secureTextEntry
+                  secureTextEntry={!showCurrentPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
                   autoComplete="password"
                 />
+                <TouchableOpacity onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
+                  <Icon 
+                    name={showCurrentPassword ? "eye-outline" : "eye-off-outline"} 
+                    size={20} 
+                    color={themeColors.lightBlue} 
+                    style={styles.inputIcon} 
+                  />
+                </TouchableOpacity>
               </View>
               
               <View style={styles.inputContainer}>
@@ -324,11 +385,19 @@ const SettingsScreen = () => {
                   placeholderTextColor="rgba(255, 255, 255, 0.5)"
                   value={newPassword}
                   onChangeText={setNewPassword}
-                  secureTextEntry
+                  secureTextEntry={!showNewPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
                   autoComplete="new-password"
                 />
+                <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)}>
+                  <Icon 
+                    name={showNewPassword ? "eye-outline" : "eye-off-outline"} 
+                    size={20} 
+                    color={themeColors.lightBlue} 
+                    style={styles.inputIcon} 
+                  />
+                </TouchableOpacity>
               </View>
               
               <View style={styles.inputContainer}>
@@ -339,11 +408,19 @@ const SettingsScreen = () => {
                   placeholderTextColor="rgba(255, 255, 255, 0.5)"
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
-                  secureTextEntry
+                  secureTextEntry={!showConfirmPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
                   autoComplete="new-password"
                 />
+                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  <Icon 
+                    name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} 
+                    size={20} 
+                    color={themeColors.lightBlue} 
+                    style={styles.inputIcon} 
+                  />
+                </TouchableOpacity>
               </View>
               
               {renderButton(

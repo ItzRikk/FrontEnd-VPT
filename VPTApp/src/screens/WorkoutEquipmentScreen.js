@@ -235,7 +235,8 @@ const WorkoutEquipmentScreen = () => {
     // Check if user already has a preference
     const fetchUserPreference = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const session = supabase.auth.session();
+        const user = session ? session.user : null;
         if (user && user.user_metadata && user.user_metadata.equipment_preference) {
           const pref = user.user_metadata.equipment_preference;
           setSavedPreference(pref);
@@ -289,9 +290,8 @@ const WorkoutEquipmentScreen = () => {
 
     try {
       setLoading(true);
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError) throw userError;
+      const session2 = supabase.auth.session();
+      const user = session2 ? session2.user : null;
       
       if (!user) {
         Alert.alert('Error', 'You must be logged in to save your equipment preferences.');
@@ -300,7 +300,7 @@ const WorkoutEquipmentScreen = () => {
       }
 
       // Update user metadata with equipment preference
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await supabase.auth.update({
         data: {
           equipment_preference: selectedEquipment,
         }

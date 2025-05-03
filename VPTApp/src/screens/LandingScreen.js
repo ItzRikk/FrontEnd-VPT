@@ -82,6 +82,8 @@ const LandingScreen = ({ navigation }) => {
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [canAcceptTerms, setCanAcceptTerms] = useState(false);
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
 
   // Clear all input fields when component mounts
   useEffect(() => {
@@ -115,6 +117,31 @@ const LandingScreen = ({ navigation }) => {
     setCanAcceptTerms(false);
   }, [isLogin]);
 
+  const handleResendVerification = async () => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signIn({
+        email: verificationEmail,
+        password: password,
+      });
+      
+      if (error) {
+        Alert.alert('Error', 'Failed to resend verification email. Please try again later.');
+        return;
+      }
+      
+      Alert.alert(
+        'Success',
+        'Verification email has been resent. Please check your inbox and spam folder.'
+      );
+    } catch (error) {
+      console.error('Error resending verification:', error);
+      Alert.alert('Error', 'Failed to resend verification email. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (loading) return;
     try {
@@ -123,14 +150,17 @@ const LandingScreen = ({ navigation }) => {
         // Check if input is email or username
         const isEmail = email.includes('@');
         let authData;
+        let loginEmail = email.trim();
+        let loginName = name.trim();
+        let loginUsername = username.trim();
         
         if (isEmail) {
           // Login with email
-          const { data, error } = await supabase.auth.signInWithPassword({
+          const { user, error } = await supabase.auth.signIn({
             email: email.trim(),
             password: password.trim(),
           });
-          authData = { data, error };
+          authData = { user, error };
         } else {
           // Login with username
           // First get the user's email from the userProfile table
@@ -146,11 +176,12 @@ const LandingScreen = ({ navigation }) => {
           }
           
           // Then sign in with the email
-          const { data, error } = await supabase.auth.signInWithPassword({
+          const { user, error } = await supabase.auth.signIn({
             email: profileData.email,
             password: password.trim(),
           });
-          authData = { data, error };
+          authData = { user, error };
+          loginEmail = profileData.email;
         }
         
         if (authData.error) {
@@ -158,15 +189,17 @@ const LandingScreen = ({ navigation }) => {
           return;
         }
         
-        if (authData.data?.user) {
-          const userId = authData.data.user.id;
-          // Check if questionnaire is completed
+        if (authData.user) {
+          // Hide verification card after successful login
+          setShowVerificationMessage(false);
+          setVerificationEmail('');
+          const userId = authData.user.id;
+          // Only one check for questionnaire completion
           const { data: questionnaireData, error: questionnaireError } = await supabase
             .from('questionnaire_answers')
             .select('id')
             .eq('user_id', userId)
             .single();
-            
           if (!questionnaireData) {
             // No questionnaire found, redirect to onboarding
             navigation.navigate('Questionnaire');
@@ -176,33 +209,73 @@ const LandingScreen = ({ navigation }) => {
           }
         }
       } else {
+        console.log('Starting signup process...');
+        
         if (!name.trim()) {
+          console.log('Name validation failed');
           Alert.alert('Error', 'Please enter your name');
           return;
         }
         if (!username.trim()) {
+          console.log('Username validation failed');
           Alert.alert('Error', 'Please enter a username');
           return;
         }
         if (!email.trim()) {
+          console.log('Email validation failed');
           Alert.alert('Error', 'Please enter your email');
           return;
         }
         if (!password.trim()) {
+          console.log('Password validation failed');
           Alert.alert('Error', 'Please enter your password');
           return;
         }
         if (password.trim().length < 6) {
+          console.log('Password length validation failed');
           Alert.alert('Error', 'Password must be at least 6 characters long');
           return;
         }
         if (!hasAcceptedTerms && !isLogin) {
+          console.log('Terms acceptance validation failed');
           Alert.alert('Error', 'Please accept the terms and conditions');
           return;
         }
-        
+
+        console.log('Checking if email exists in userProfile...');
+        // First check if email exists in userProfile
+        const { data: existingProfile, error: profileCheckError } = await supabase
+          .from('userProfile')
+          .select('user_id')
+          .eq('email', email.trim())
+          .single();
+
+        console.log('Profile check result:', { existingProfile, profileCheckError });
+
+        // Only show error if it's not a "no rows returned" error
+        if (profileCheckError && profileCheckError.code !== 'PGRST116') {
+          console.error('Profile check error:', profileCheckError);
+          Alert.alert('Error', 'Failed to check email availability. Please try again.');
+          return;
+        }
+
+        // If profile exists, we can't use this email
+        if (existingProfile) {
+          console.log('Email already exists in userProfile');
+          Alert.alert(
+            'Email Already Registered',
+            'This email is already registered. Please sign in or use a different email.',
+            [
+              { text: 'Sign In', onPress: () => setIsLogin(true) },
+              { text: 'OK', style: 'cancel' }
+            ]
+          );
+          return;
+        }
+
+        console.log('Attempting to create auth user...');
         // Create user in Supabase Auth
-        const { data, error } = await supabase.auth.signUp({
+        const { user, error } = await supabase.auth.signUp({
           email: email.trim(),
           password: password.trim(),
           options: {
@@ -214,55 +287,194 @@ const LandingScreen = ({ navigation }) => {
           }
         });
         
-        if (error) {
-          Alert.alert('Signup Error', error.message);
-          return;
-        }
+        console.log('Auth signup result:', { user, error });
         
-        if (data?.user) {
-          // Capture values before clearing state
-          const upsertUserId = data.user.id;
-          const upsertEmail = email.trim();
-          const upsertName = name.trim();
-          const upsertUsername = username.trim();
-          
-          // Insert into userProfile
-          const { error: profileError } = await supabase
-            .from('userProfile')
-            .upsert({
-              user_id: upsertUserId,
-              email: upsertEmail,
-              name: upsertName,
-              username: upsertUsername,
-              terms_accepted_at: true,
-              is_admin: false
-            });
-            
-          if (profileError) {
-            Alert.alert('Profile Error', profileError.message);
-            // Clear fields on error
-            setEmail('');
-            setPassword('');
-            setName('');
-            setUsername('');
-            setHasAcceptedTerms(false);
-            setCanAcceptTerms(false);
+        if (error) {
+          if (error.message.includes('already registered')) {
+            console.log('Email exists in auth.users, attempting cleanup...');
+            // If the email exists in auth.users but not in userProfile,
+            // we need to clean up the auth user first
+            try {
+              // Try to sign in to get the user ID
+              const { user: signInUser, error: signInError } = await supabase.auth.signIn({
+                email: email.trim(),
+                password: password.trim(),
+              });
+
+              console.log('Sign in result:', { signInUser, signInError });
+
+              if (signInError) {
+                console.error('Sign in error:', signInError);
+                Alert.alert(
+                  'Email Already Registered',
+                  'This email is already registered but in an invalid state. Please contact support.',
+                  [
+                    { text: 'OK', style: 'cancel' }
+                  ]
+                );
+                return;
+              }
+
+              console.log('Attempting to delete orphaned user...');
+              // Delete the orphaned auth user
+              const { error: deleteError } = await supabase.rpc('delete_user', {
+                user_id: signInUser.id
+              });
+
+              console.log('Delete user result:', { deleteError });
+
+              if (deleteError) {
+                console.error('Delete user error:', deleteError);
+                Alert.alert(
+                  'Error',
+                  'Failed to clean up existing account. Please contact support.',
+                  [
+                    { text: 'OK', style: 'cancel' }
+                  ]
+                );
+                return;
+              }
+
+              console.log('Attempting second signup...');
+              // Now try signup again
+              const { user: newUser, error: newError } = await supabase.auth.signUp({
+                email: email.trim(),
+                password: password.trim(),
+                options: {
+                  data: {
+                    name: name.trim(),
+                    username: username.trim(),
+                  },
+                  emailRedirectTo: 'vpt://auth/callback'
+                }
+              });
+
+              console.log('Second signup result:', { newUser, newError });
+
+              if (newError) {
+                console.error('Second signup error:', newError);
+                Alert.alert('Signup Error', newError.message);
+                return;
+              }
+
+              // Try to create userProfile after second signup
+              if (newUser) {
+                try {
+                  const { error: profileError } = await supabase
+                    .from('userProfile')
+                    .upsert({
+                      user_id: newUser.id,
+                      email: email.trim(),
+                      name: name.trim(),
+                      username: username.trim(),
+                      terms_accepted_at: true,
+                      is_admin: false
+                    });
+                  if (profileError) {
+                    if (profileError.code === '23503') {
+                      Alert.alert('Profile Error', 'Account created, but profile could not be created yet. Please try logging in again in a few seconds.');
+                    } else {
+                      Alert.alert('Profile Error', profileError.message);
+                    }
+                    return;
+                  }
+                } catch (profileCatchError) {
+                  Alert.alert('Profile Error', 'Account created, but profile could not be created yet. Please try logging in again in a few seconds.');
+                  return;
+                }
+                setVerificationEmail(email.trim());
+                setShowVerificationMessage(true);
+                Alert.alert(
+                  'Success',
+                  'Account created! Please check your email for the verification link. If you don\'t see it, check your spam folder.',
+                  [
+                    { 
+                      text: 'Resend Verification', 
+                      onPress: handleResendVerification 
+                    },
+                    { 
+                      text: 'OK', 
+                      onPress: () => {
+                        setEmail('');
+                        setPassword('');
+                        setName('');
+                        setUsername('');
+                        setHasAcceptedTerms(false);
+                        setCanAcceptTerms(false);
+                        setIsLogin(true);
+                      }
+                    }
+                  ]
+                );
+                return;
+              }
+            } catch (cleanupError) {
+              console.error('Error cleaning up orphaned user:', cleanupError);
+              Alert.alert(
+                'Error',
+                'Failed to clean up existing account. Please contact support.',
+                [
+                  { text: 'OK', style: 'cancel' }
+                ]
+              );
+              return;
+            }
+          } else {
+            console.error('Signup error:', error);
+            Alert.alert('Signup Error', error.message);
             return;
           }
-          
+        }
+        
+        if (user) {
+          // Immediately create userProfile after signup
+          try {
+            const { error: profileError } = await supabase
+              .from('userProfile')
+              .upsert({
+                user_id: user.id,
+                email: email.trim(),
+                name: name.trim(),
+                username: username.trim(),
+                terms_accepted_at: true,
+                is_admin: false
+              });
+            if (profileError) {
+              if (profileError.code === '23503') {
+                Alert.alert('Profile Error', 'Account created, but profile could not be created yet. Please try logging in again in a few seconds.');
+              } else {
+                Alert.alert('Profile Error', profileError.message);
+              }
+              return;
+            }
+          } catch (profileCatchError) {
+            Alert.alert('Profile Error', 'Account created, but profile could not be created yet. Please try logging in again in a few seconds.');
+            return;
+          }
+          setVerificationEmail(email.trim());
+          setShowVerificationMessage(true);
           Alert.alert(
             'Success',
-            'Account created! Please check your email for the verification link.'
+            'Account created! Please check your email for the verification link. If you don\'t see it, check your spam folder.',
+            [
+              { 
+                text: 'Resend Verification', 
+                onPress: handleResendVerification 
+              },
+              { 
+                text: 'OK', 
+                onPress: () => {
+                  setEmail('');
+                  setPassword('');
+                  setName('');
+                  setUsername('');
+                  setHasAcceptedTerms(false);
+                  setCanAcceptTerms(false);
+                  setIsLogin(true);
+                }
+              }
+            ]
           );
-          
-          // Clear all fields after successful signup
-          setEmail('');
-          setPassword('');
-          setName('');
-          setUsername('');
-          setHasAcceptedTerms(false);
-          setCanAcceptTerms(false);
-          setIsLogin(true);
         }
       }
     } catch (error) {
@@ -286,8 +498,9 @@ const LandingScreen = ({ navigation }) => {
     
     // For login, we need to update the database and then navigate
     if (isLogin) {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (!userError && user) {
+      const session = supabase.auth.session();
+      const user = session ? session.user : null;
+      if (user) {
         navigation.navigate('Profile');
       }
     } else {
@@ -297,9 +510,9 @@ const LandingScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
+    <SafeAreaView style={[layoutStyles.container, { backgroundColor: themeColors.darkNavy }]} edges={[]}>
       <View style={styles.background}>
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
@@ -428,6 +641,29 @@ const LandingScreen = ({ navigation }) => {
                       Forgot Password?
                     </Text>
                   </TouchableOpacity>
+                )}
+                {showVerificationMessage && (
+                  <View style={styles.verificationMessage}>
+                    <Text style={styles.verificationText}>
+                      Please check your email ({verificationEmail}) for the verification link.
+                      If you don't see it, check your spam folder.
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.resendButton}
+                      onPress={handleResendVerification}
+                      disabled={loading}
+                    >
+                      <Icon 
+                        name="refresh-outline" 
+                        size={16} 
+                        color={themeColors.lightBlue} 
+                        style={styles.resendIcon}
+                      />
+                      <Text style={styles.resendText}>
+                        Resend Verification Email
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
             </LinearGradient>
@@ -684,6 +920,33 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     textAlign: 'center',
     marginTop: 0,
+  },
+  verificationMessage: {
+    backgroundColor: 'rgba(164, 212, 228, 0.1)',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(164, 212, 228, 0.2)',
+  },
+  verificationText: {
+    color: themeColors.lightBlue,
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  resendButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resendIcon: {
+    marginRight: 8,
+  },
+  resendText: {
+    color: themeColors.lightBlue,
+    fontSize: 14,
+    textDecorationLine: 'underline',
   },
 });
 

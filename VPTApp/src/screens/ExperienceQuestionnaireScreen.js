@@ -119,12 +119,9 @@ const ExperienceQuestionnaireScreen = () => {
       const experienceLevel = determineExperienceLevel(totalPoints);
       
       // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) {
-        console.error('User error:', userError);
-        throw userError;
-      }
-      
+      const session = supabase.auth.session();
+      const user = session ? session.user : null;
+
       if (!user) {
         Alert.alert('Error', 'You must be logged in to save your experience level');
         return;
@@ -163,7 +160,7 @@ const ExperienceQuestionnaireScreen = () => {
       console.log('Saved answers:', answerData);
 
       // Update user metadata with experience level
-      const { error: updateError } = await supabase.auth.updateUser({
+      const { error: updateError } = await supabase.auth.update({
         data: {
           experience_level: experienceLevel.level,
           experience_description: experienceLevel.description

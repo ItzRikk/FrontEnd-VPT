@@ -130,7 +130,7 @@ const ProfileHeader = ({ name, avatarUrl }) => {
   );
 };
 
-const DetailCard = ({ user, experienceLevel }) => {
+const DetailCard = ({ user, profile, experienceLevel }) => {
   const { width } = useWindowDimensions();
 
   return (
@@ -145,7 +145,7 @@ const DetailCard = ({ user, experienceLevel }) => {
           <Icon name="mail-outline" size={18} color={themeColors.lightBlue} />
           <Text style={styles.detailLabel}>Email</Text>
           <Text style={[styles.detailValue, width < 350 && { fontSize: 12 }]} numberOfLines={1}>
-            {user?.email}
+            {profile?.email || user?.email}
           </Text>
         </View>
         <View style={styles.divider} />
@@ -153,7 +153,7 @@ const DetailCard = ({ user, experienceLevel }) => {
           <Icon name="person-outline" size={18} color={themeColors.lightBlue} />
           <Text style={styles.detailLabel}>Name</Text>
           <Text style={[styles.detailValue, width < 350 && { fontSize: 12 }]} numberOfLines={1}>
-            {user?.user_metadata?.name || 'Anonymous User'}
+            {profile?.name || 'Anonymous User'}
           </Text>
         </View>
         {experienceLevel?.level && (
@@ -175,6 +175,7 @@ const DetailCard = ({ user, experienceLevel }) => {
 
 const ProfileScreen = ({ route, navigation }) => {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [experienceLevel, setExperienceLevel] = useState(null);
   const { width, height } = useWindowDimensions();
@@ -186,31 +187,31 @@ const ProfileScreen = ({ route, navigation }) => {
         setLoading(true);
         
         // First check if we have a session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const session2 = supabase.auth.session();
         
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          navigation.navigate('Landing');
-          return;
-        }
-
-        if (!session) {
+        if (!session2) {
           console.log('No session found, redirecting to login');
           navigation.navigate('Landing');
           return;
         }
         
         // Get current user from the session
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error) {
-          console.error('Error getting user:', error);
-          navigation.navigate('Landing');
-          return;
-        }
+        const user = session2.user;
         
         if (user) {
           setUser(user);
+
+          // Fetch userProfile for name
+          const { data: profileData, error: profileError } = await supabase
+            .from('userProfile')
+            .select('name, username, email')
+            .eq('user_id', user.id)
+            .single();
+          if (profileData) {
+            setProfile(profileData);
+          } else {
+            setProfile(null);
+          }
           
           // Check if user has completed questionnaire
           const { data: questionnaireData, error: questionnaireError } = await supabase
@@ -319,7 +320,7 @@ const ProfileScreen = ({ route, navigation }) => {
     );
   }
 
-  const fullName = user?.user_metadata?.name || 'Anonymous User';
+  const fullName = profile?.name || 'Anonymous User';
   const padding = {
     paddingLeft: Math.max(16, insets.left),
     paddingRight: Math.max(16, insets.right),
@@ -369,7 +370,7 @@ const ProfileScreen = ({ route, navigation }) => {
           
           <View style={styles.sectionContainer}>
             <Text style={[styles.sectionTitle, width < 350 && { fontSize: 16 }]}>Account Details</Text>
-            <DetailCard user={user} experienceLevel={experienceLevel} />
+            <DetailCard user={user} profile={profile} experienceLevel={experienceLevel} />
           </View>
           
           <View style={styles.sectionContainer}>
