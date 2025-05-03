@@ -6,7 +6,7 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import { colors, spacing } from '../styles/sharedStyles';
+import { colors, spacing, iconStyles } from '../styles/sharedStyles';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
@@ -21,12 +21,12 @@ const Header = ({ title = 'VPT', showBack = true, showSettings = false }) => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Icon name="arrow-back" size={24} color={colors.primary} />
+            <Icon name="arrow-back" size={24} color={colors.primary} style={iconStyles.outlined} />
           </TouchableOpacity>
         )}
         <View style={styles.titleContainer}>
           <Image 
-            source={require('../../assets/VPT-logo.png')}
+            source={require('../../assets/VPT-logo-csumb-1.png')}
             style={styles.headerLogo}
             resizeMode="cover"
           />
@@ -37,7 +37,7 @@ const Header = ({ title = 'VPT', showBack = true, showSettings = false }) => {
             style={styles.settingsButton}
             onPress={() => navigation.navigate('Settings')}
           >
-            <Icon name="settings-outline" size={24} color={colors.primary} />
+            <Icon name="settings-outline" size={24} color={colors.primary} style={iconStyles.outlined} />
           </TouchableOpacity>
         )}
       </View>

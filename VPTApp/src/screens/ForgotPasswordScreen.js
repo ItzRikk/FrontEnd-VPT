@@ -12,7 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, textStyles } from '../styles/sharedStyles';
+import { colors, textStyles, iconContainerStyles } from '../styles/sharedStyles';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -95,7 +95,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         >
           <View style={styles.content}>
             <LinearGradient
-              colors={[colors.primary, '#FF9500']}
+              colors={[colors.gradient.start, colors.gradient.middle, colors.gradient.end]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.welcomeCard}
@@ -103,7 +103,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
               <View style={styles.headerContainer}>
                 <View style={styles.logoContainer}>
                   <Image 
-                    source={require('../../assets/VPT-logo.png')}
+                    source={require('../../assets/VPT-logo-csumb-1.png')}
                     style={styles.logo}
                     resizeMode="cover"
                   />
@@ -162,13 +162,13 @@ const ForgotPasswordScreen = ({ navigation }) => {
             {/* Decorative Footer */}
             <View style={styles.footerContainer}>
               <View style={styles.footerIconRow}>
-                <View style={styles.footerIconWrapper}>
+                <View style={iconContainerStyles.circularLarge}>
                   <Icon name="barbell-outline" size={24} color={colors.primary} />
                 </View>
-                <View style={styles.footerIconWrapper}>
+                <View style={iconContainerStyles.circularLarge}>
                   <Icon name="bicycle-outline" size={24} color={colors.primary} />
                 </View>
-                <View style={styles.footerIconWrapper}>
+                <View style={iconContainerStyles.circularLarge}>
                   <Icon name="fitness-outline" size={24} color={colors.primary} />
                 </View>
               </View>
@@ -319,17 +319,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginBottom: 16,
-  },
-  footerIconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: `${colors.primary}10`,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 8,
-    borderWidth: 1,
-    borderColor: `${colors.primary}30`,
   },
   motivationContainer: {
     alignItems: 'center',

@@ -3,8 +3,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 
 export const colors = {
-  primary: '#FF3B30',
-  secondary: '#007AFF',
+  primary: '#002D72',
+  secondary: '#FFB81C',
   background: '#F2F2F7',
   card: '#FFFFFF',
   text: '#000000',
@@ -13,8 +13,9 @@ export const colors = {
   success: '#34C759',
   overlay: 'rgba(0, 0, 0, 0.5)',
   gradient: {
-    start: '#FF3B30',
-    end: '#FF9500',
+    start: '#002D72',
+    middle: '#003D8F',
+    end: '#FFB81C',
   }
 };
 
@@ -28,9 +29,9 @@ export const spacing = {
 };
 
 export const gradients = {
-  primary: ['#007AFF', '#5856D6'],
+  primary: ['#002D72', '#003D8F', '#FFB81C'],
   success: ['#34C759', '#30D158'],
-  warning: ['#FF9500', '#FF9F0A'],
+  warning: ['#003D8F', '#FFB81C'],
   error: ['#FF3B30', '#FF453A'],
 };
 
@@ -208,4 +209,42 @@ export const BlurCard = ({ style, children }) => {
       {children}
     </BlurView>
   );
-}; 
+};
+
+export const iconStyles = StyleSheet.create({
+  outlined: {
+    textShadowColor: colors.secondary,
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 1,
+  },
+  outlinedLarge: {
+    textShadowColor: colors.secondary,
+    textShadowOffset: { width: -2, height: 2 },
+    textShadowRadius: 2,
+  }
+});
+
+export const iconContainerStyles = StyleSheet.create({
+  circular: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: `${colors.primary}10`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 12,
+    borderWidth: 2,
+    borderColor: colors.secondary,
+  },
+  circularLarge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: `${colors.primary}10`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 12,
+    borderWidth: 2,
+    borderColor: colors.secondary,
+  }
+}); 
