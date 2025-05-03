@@ -1,7 +1,32 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, SafeAreaView, StyleSheet, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import { colors, spacing, textStyles } from '../styles/sharedStyles';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  SafeAreaView,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  Keyboard,
+  ScrollView,
+  Image,
+} from 'react-native';
+import { colors, spacing, textStyles, iconContainerStyles, layoutStyles } from '../styles/sharedStyles';
 import { supabase } from '../api/supabaseClient';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const InputField = ({ icon, ...props }) => (
+  <View style={styles.inputContainer}>
+    <Icon name={icon} size={20} color="rgba(255, 255, 255, 0.6)" style={styles.inputIcon} />
+    <TextInput
+      style={styles.input}
+      placeholderTextColor="rgba(255, 255, 255, 0.6)"
+      {...props}
+    />
+  </View>
+);
 
 const ResetPasswordScreen = ({ route, navigation }) => {
   const [email, setEmail] = useState(route.params?.email || '');
@@ -136,68 +161,120 @@ const ResetPasswordScreen = ({ route, navigation }) => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <SafeAreaView style={styles.background}>
-        <View style={styles.container}>
-          <Text style={styles.title}>Reset Your Password</Text>
-          
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor={colors.textSecondary}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            editable={!route.params?.email}
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="6-Digit Verification Code"
-            placeholderTextColor={colors.textSecondary}
-            value={code}
-            onChangeText={handleCodeChange}
-            keyboardType="number-pad"
-            maxLength={6}
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="New Password"
-            placeholderTextColor={colors.textSecondary}
-            value={newPassword}
-            onChangeText={setNewPassword}
-            secureTextEntry
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm New Password"
-            placeholderTextColor={colors.textSecondary}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-          />
-
-          <TouchableOpacity 
-            style={styles.button} 
-            onPress={handleResetPassword} 
-            disabled={loading}
+      <SafeAreaView style={[layoutStyles.container]} edges={['top']}>
+        <View style={styles.background}>
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
           >
-            <Text style={styles.buttonText}>
-              {loading ? 'Resetting...' : 'Reset Password'}
-            </Text>
-          </TouchableOpacity>
+            <View style={styles.content}>
+              <LinearGradient
+                colors={[colors.gradient.start, colors.gradient.middle, colors.gradient.end]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.welcomeCard}
+              >
+                <View style={styles.headerContainer}>
+                  <View style={styles.logoContainer}>
+                    <Image 
+                      source={require('../../assets/VPT-logo-csumb-1.png')}
+                      style={styles.logo}
+                      resizeMode="cover"
+                    />
+                  </View>
+                  <Text style={[textStyles.title, styles.title]}>Reset Password</Text>
+                  <Text style={[textStyles.subtitle, styles.subtitle]}>
+                    Enter your verification code and new password
+                  </Text>
+                </View>
 
-          <TouchableOpacity 
-            style={[styles.button, styles.resendButton]} 
-            onPress={handleResendCode}
-            disabled={resending}
-          >
-            <Text style={[styles.buttonText, styles.resendButtonText]}>
-              {resending ? 'Sending...' : 'Resend Code'}
-            </Text>
-          </TouchableOpacity>
+                <View style={styles.formContainer}>
+                  <InputField
+                    icon="mail-outline"
+                    placeholder="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={!route.params?.email}
+                  />
+
+                  <InputField
+                    icon="key-outline"
+                    placeholder="6-Digit Verification Code"
+                    value={code}
+                    onChangeText={handleCodeChange}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                  />
+
+                  <InputField
+                    icon="lock-closed-outline"
+                    placeholder="New Password"
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    secureTextEntry
+                  />
+
+                  <InputField
+                    icon="lock-closed-outline"
+                    placeholder="Confirm New Password"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                  />
+
+                  <TouchableOpacity 
+                    style={[styles.submitButton]}
+                    onPress={handleResetPassword}
+                    disabled={loading}
+                  >
+                    <Icon 
+                      name={loading ? "reload-outline" : "key-outline"} 
+                      size={20} 
+                      color={colors.primary} 
+                      style={styles.submitIcon}
+                    />
+                    <Text style={styles.submitButtonText}>
+                      {loading ? 'Resetting...' : 'Reset Password'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                    disabled={loading}
+                  >
+                    <Icon 
+                      name="arrow-back-outline" 
+                      size={16} 
+                      color={colors.card} 
+                      style={styles.backIcon}
+                    />
+                    <Text style={styles.backButtonText}>
+                      Back to Login
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </LinearGradient>
+
+              {/* Decorative Footer */}
+              <View style={styles.footerContainer}>
+                <View style={styles.footerIconRow}>
+                  <View style={iconContainerStyles.circularLarge}>
+                    <Icon name="barbell-outline" size={24} color={colors.primary} />
+                  </View>
+                  <View style={iconContainerStyles.circularLarge}>
+                    <Icon name="bicycle-outline" size={24} color={colors.primary} />
+                  </View>
+                  <View style={iconContainerStyles.circularLarge}>
+                    <Icon name="fitness-outline" size={24} color={colors.primary} />
+                  </View>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
         </View>
       </SafeAreaView>
     </TouchableWithoutFeedback>
@@ -209,53 +286,127 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  container: {
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.lg,
+    padding: 20,
+  },
+  welcomeCard: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#000000',
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  headerContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    overflow: 'hidden',
+    backgroundColor: '#000',
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: colors.card,
+  },
+  logo: {
+    width: '100%',
+    height: '100%',
   },
   title: {
-    ...textStyles.title,
-    color: colors.primary,
-    marginBottom: spacing.lg,
-    fontSize: 24,
+    color: colors.card,
     textAlign: 'center',
+    marginBottom: 8,
+    fontSize: 24,
+    fontWeight: '600',
+  },
+  subtitle: {
+    color: colors.card,
+    textAlign: 'center',
+    opacity: 0.8,
+    fontSize: 14,
+  },
+  formContainer: {
+    width: '100%',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    height: 50,
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
-    width: 300,
+    flex: 1,
+    height: 50,
+    color: colors.card,
+    fontSize: 16,
+  },
+  submitButton: {
     height: 50,
     backgroundColor: colors.card,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.primary + '20',
-    color: colors.text,
-    fontSize: 16,
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.md,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    padding: spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: spacing.sm,
-    width: 300,
+    marginTop: 8,
   },
-  buttonText: {
-    color: colors.card,
+  submitIcon: {
+    marginRight: 8,
+  },
+  submitButtonText: {
+    color: colors.primary,
     fontSize: 16,
     fontWeight: '600',
   },
-  resendButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.primary,
-    marginTop: spacing.md,
-    marginBottom: 0,
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
   },
-  resendButtonText: {
-    color: colors.primary,
+  backIcon: {
+    marginRight: 8,
+    opacity: 0.8,
+  },
+  backButtonText: {
+    color: colors.card,
+    fontSize: 14,
+  },
+  footerContainer: {
+    width: '100%',
+    paddingVertical: 24,
+    alignItems: 'center',
+    marginTop: 32,
+  },
+  footerIconRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
 });
 
