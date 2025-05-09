@@ -69,7 +69,7 @@ const ExerciseCard = ({ exercise }) => {
           <Text style={styles.detail}><Text style={styles.detailLabel}>Rest:</Text> {exercise.rest}s</Text>
         </View>
         <View style={styles.detailsRow}>
-          <Text style={styles.detail}><Text style={styles.detailLabel}>Duration:</Text> {exercise.duration} min</Text>
+          <Text style={styles.detail}><Text style={styles.detailLabel}>Duration:</Text> {exercise.duration}s</Text>
           <Text style={styles.detail}><Text style={styles.detailLabel}>Level:</Text> {exercise.level}</Text>
         </View>
         <View style={styles.detailsRow}>
